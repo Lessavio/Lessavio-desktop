@@ -23,14 +23,14 @@ export const authController = {
     }
   },
 
-  logout(_req: Request, res: Response): void {
+  async logout(_req: Request, res: Response): Promise<void> {
     clearSessionCookie(res);
     res.status(204).send();
   },
 
-  me(req: Request, res: Response, next: NextFunction): void {
+  async me(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      res.json(userService.getMe(req.authUserId as string));
+      res.json(await userService.getMe(req.authUserId as string));
     } catch (error) {
       next(error);
     }

@@ -2,8 +2,6 @@ import { randomBytes, scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { AppError } from "../../common/errors/AppError";
 import { asObject, requiredString } from "../../common/validation";
-import { lessonRepository } from "../lesson/lesson.repository";
-import { studentRepository } from "../student/student.repository";
 import { PublicUser, User } from "./user.model";
 import { userRepository } from "./user.repository";
 
@@ -65,20 +63,14 @@ export const userService = {
     const email = normalizedEmail(data.email);
     const rawPassword = password(data.password);
 
-    if (userRepository.findByEmail(email)) {
+    if (await userRepository.findByEmail(email)) {
       throw new AppError("Пользователь с таким email уже существует", 409);
     }
 
     const passwordHash = await hashPassword(rawPassword);
-    if (userRepository.findByEmail(email)) {
+    const user = await userRepository.create({ name, email, passwordHash, currency: "UAH" });
+    if (!user) {
       throw new AppError("Пользователь с таким email уже существует", 409);
-    }
-
-    const isFirstUser = userRepository.count() === 0;
-    const user = userRepository.create({ name, email, passwordHash, currency: "UAH" });
-    if (isFirstUser) {
-      studentRepository.claimOwnerless(user.id);
-      lessonRepository.claimOwnerless(user.id);
     }
     return publicUser(user);
   },
@@ -95,7 +87,7 @@ export const userService = {
       throw new AppError("Неверный email или пароль", 401);
     }
 
-    const user = userRepository.findByEmail(email);
+    const user = await userRepository.findByEmail(email);
     const valid = await verifyPassword(
       rawPassword,
       user?.passwordHash ?? `${HASH_PREFIX}$${DUMMY_SALT}$${DUMMY_HASH}`
@@ -104,8 +96,8 @@ export const userService = {
     return publicUser(user);
   },
 
-  getMe(id: string): PublicUser {
-    const user = userRepository.findById(id);
+  async getMe(id: string): Promise<PublicUser> {
+    const user = await userRepository.findById(id);
     if (!user) throw new AppError("Требуется авторизация", 401);
     return publicUser(user);
   },

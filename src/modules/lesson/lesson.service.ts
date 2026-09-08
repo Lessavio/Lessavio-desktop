@@ -15,7 +15,6 @@ import {
   Lesson,
   LessonFilters,
   LESSON_STATUSES,
-  LessonStatus,
   UpdateLessonDto,
 } from "./lesson.model";
 import { lessonRepository } from "./lesson.repository";
@@ -27,18 +26,18 @@ function duration(value: number): number {
   return value;
 }
 
-function ensureStudent(ownerId: string, studentId: string, allowArchived = false) {
-  const student = studentRepository.findById(ownerId, studentId);
+async function ensureStudent(ownerId: string, studentId: string, allowArchived = false) {
+  const student = await studentRepository.findById(ownerId, studentId);
   if (!student || (student.archived && !allowArchived)) {
     throw new AppError("Активный ученик не найден", 404);
   }
   return student;
 }
 
-function parseCreate(ownerId: string, input: unknown): CreateLessonDto {
+async function parseCreate(ownerId: string, input: unknown): Promise<CreateLessonDto> {
   const data = asObject(input);
   const studentId = requiredString(data, "studentId", "Ученик", 40);
-  const student = ensureStudent(ownerId, studentId);
+  const student = await ensureStudent(ownerId, studentId);
   const durationMinutes = duration(requiredNumber(data, "durationMinutes", "Продолжительность", 15, 480));
   return {
     studentId,
@@ -77,7 +76,7 @@ function parseFilterDate(value: unknown, label: string): Date | undefined {
 }
 
 export const lessonService = {
-  getAll(ownerId: string, query: Record<string, unknown> = {}): Lesson[] {
+  getAll(ownerId: string, query: Record<string, unknown> = {}): Promise<Lesson[]> {
     const filters: LessonFilters = {
       from: parseFilterDate(query.from, "from"),
       to: parseFilterDate(query.to, "to"),
@@ -89,44 +88,36 @@ export const lessonService = {
     return lessonRepository.findAll(ownerId, filters);
   },
 
-  getById(ownerId: string, id: string): Lesson {
-    const lesson = lessonRepository.findById(ownerId, id);
+  async getById(ownerId: string, id: string): Promise<Lesson> {
+    const lesson = await lessonRepository.findById(ownerId, id);
     if (!lesson) throw new AppError("Урок не найден", 404);
     return lesson;
   },
 
-  create(ownerId: string, input: unknown): Lesson {
-    const dto = parseCreate(ownerId, input);
-    if (
-      dto.status !== "cancelled" &&
-      lessonRepository.hasConflict(ownerId, dto.startsAt, dto.durationMinutes)
-    ) {
+  async create(ownerId: string, input: unknown): Promise<Lesson> {
+    const dto = await parseCreate(ownerId, input);
+    const lesson = await lessonRepository.create(ownerId, dto);
+    if (!lesson) {
       throw new AppError("На это время уже запланирован другой урок", 409);
     }
-    return lessonRepository.create(ownerId, dto);
+    return lesson;
   },
 
-  update(ownerId: string, id: string, input: unknown): Lesson {
-    const current = this.getById(ownerId, id);
+  async update(ownerId: string, id: string, input: unknown): Promise<Lesson> {
+    const current = await this.getById(ownerId, id);
     const dto = parseUpdate(input);
     const studentId = dto.studentId ?? current.studentId;
-    ensureStudent(ownerId, studentId, studentId === current.studentId);
-    const candidate = {
-      startsAt: dto.startsAt ?? current.startsAt,
-      durationMinutes: dto.durationMinutes ?? current.durationMinutes,
-      status: (dto.status ?? current.status) as LessonStatus,
-    };
-    if (
-      candidate.status !== "cancelled" &&
-      lessonRepository.hasConflict(ownerId, candidate.startsAt, candidate.durationMinutes, id)
-    ) {
+    await ensureStudent(ownerId, studentId, studentId === current.studentId);
+    const result = await lessonRepository.update(ownerId, id, dto);
+    if (result.conflict) {
       throw new AppError("На это время уже запланирован другой урок", 409);
     }
-    return lessonRepository.update(ownerId, id, dto) as Lesson;
+    if (!result.lesson) throw new AppError("Урок не найден", 404);
+    return result.lesson;
   },
 
-  delete(ownerId: string, id: string): void {
-    this.getById(ownerId, id);
-    lessonRepository.delete(ownerId, id);
+  async delete(ownerId: string, id: string): Promise<void> {
+    await this.getById(ownerId, id);
+    await lessonRepository.delete(ownerId, id);
   },
 };

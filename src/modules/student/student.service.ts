@@ -7,7 +7,6 @@ import {
   requiredNumber,
   requiredString,
 } from "../../common/validation";
-import { lessonRepository } from "../lesson/lesson.repository";
 import { CreateStudentDto, Student, UpdateStudentDto } from "./student.model";
 import { studentRepository } from "./student.repository";
 
@@ -54,30 +53,32 @@ function parseUpdate(input: unknown): UpdateStudentDto {
 }
 
 export const studentService = {
-  getAll(ownerId: string, includeArchived = false): Student[] {
+  getAll(ownerId: string, includeArchived = false): Promise<Student[]> {
     return studentRepository.findAll(ownerId, includeArchived);
   },
 
-  getById(ownerId: string, id: string): Student {
-    const student = studentRepository.findById(ownerId, id);
+  async getById(ownerId: string, id: string): Promise<Student> {
+    const student = await studentRepository.findById(ownerId, id);
     if (!student) throw new AppError("Ученик не найден", 404);
     return student;
   },
 
-  create(ownerId: string, input: unknown): Student {
+  create(ownerId: string, input: unknown): Promise<Student> {
     return studentRepository.create(ownerId, parseCreate(input));
   },
 
-  update(ownerId: string, id: string, input: unknown): Student {
-    this.getById(ownerId, id);
-    return studentRepository.update(ownerId, id, parseUpdate(input)) as Student;
+  async update(ownerId: string, id: string, input: unknown): Promise<Student> {
+    await this.getById(ownerId, id);
+    const student = await studentRepository.update(ownerId, id, parseUpdate(input));
+    if (!student) throw new AppError("Ученик не найден", 404);
+    return student;
   },
 
-  delete(ownerId: string, id: string): void {
-    this.getById(ownerId, id);
-    if (lessonRepository.hasForStudent(ownerId, id)) {
+  async delete(ownerId: string, id: string): Promise<void> {
+    const result = await studentRepository.deleteIfNoLessons(ownerId, id);
+    if (result === "notFound") throw new AppError("Ученик не найден", 404);
+    if (result === "hasLessons") {
       throw new AppError("У ученика есть история занятий. Переместите его в архив", 409);
     }
-    studentRepository.delete(ownerId, id);
   },
 };

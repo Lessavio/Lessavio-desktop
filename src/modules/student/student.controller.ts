@@ -2,41 +2,48 @@ import { NextFunction, Request, Response } from "express";
 import { studentService } from "./student.service";
 
 export const studentController = {
-  getAll(req: Request, res: Response, next: NextFunction): void {
+  async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      res.json(studentService.getAll(req.authUserId as string, req.query.includeArchived === "true"));
+      res.json(
+        await studentService.getAll(
+          req.authUserId as string,
+          req.query.includeArchived === "true"
+        )
+      );
     } catch (error) {
       next(error);
     }
   },
 
-  getById(req: Request, res: Response, next: NextFunction): void {
+  async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      res.json(studentService.getById(req.authUserId as string, req.params.id));
+      res.json(await studentService.getById(req.authUserId as string, req.params.id));
     } catch (error) {
       next(error);
     }
   },
 
-  create(req: Request, res: Response, next: NextFunction): void {
+  async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      res.status(201).json(studentService.create(req.authUserId as string, req.body));
+      res.status(201).json(await studentService.create(req.authUserId as string, req.body));
     } catch (error) {
       next(error);
     }
   },
 
-  update(req: Request, res: Response, next: NextFunction): void {
+  async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      res.json(studentService.update(req.authUserId as string, req.params.id, req.body));
+      res.json(
+        await studentService.update(req.authUserId as string, req.params.id, req.body)
+      );
     } catch (error) {
       next(error);
     }
   },
 
-  delete(req: Request, res: Response, next: NextFunction): void {
+  async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      studentService.delete(req.authUserId as string, req.params.id);
+      await studentService.delete(req.authUserId as string, req.params.id);
       res.status(204).send();
     } catch (error) {
       next(error);
