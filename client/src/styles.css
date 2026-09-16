@@ -2916,3 +2916,242 @@ h2 {
     font-size: 9px;
   }
 }
+
+/* Editor modal layout */
+.modal {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  padding: 0;
+}
+
+.modal--wide {
+  width: min(780px, 100%);
+}
+
+.modal__header {
+  z-index: 2;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+}
+
+.modal>form {
+  min-width: 0;
+  min-height: 0;
+  padding: 14px 18px 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.modal__actions {
+  z-index: 3;
+  bottom: 0;
+  margin: 16px -18px 0;
+  padding: 12px 18px;
+  flex-wrap: wrap;
+  box-shadow: 0 -10px 24px color-mix(in srgb, var(--surface-raised) 78%, transparent);
+}
+
+.lesson-editor {
+  display: grid;
+  gap: 8px;
+}
+
+.editor-section {
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.editor-section .form-section-title {
+  margin: 0 0 8px;
+}
+
+.editor-section .field {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.lesson-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(155px, 1fr) minmax(145px, .62fr) minmax(310px, 1.6fr);
+  align-items: start;
+  gap: 10px;
+}
+
+.editor-section--details .lesson-details-grid {
+  grid-template-columns: minmax(0, 1.2fr) minmax(245px, .8fr);
+  gap: 10px;
+}
+
+.lesson-details-side {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 8px;
+}
+
+.lesson-details-side .field,
+.lesson-details-side .switch-row {
+  min-width: 0;
+  margin: 0;
+}
+
+.lesson-details-side .switch-row {
+  min-height: 40px;
+  align-self: start;
+  padding: 7px 9px;
+}
+
+.lesson-details-side .switch-row>span {
+  min-width: 0;
+}
+
+.lesson-details-side .switch-row input {
+  flex: 0 0 auto;
+}
+
+.editor-section--notes {
+  padding-block: 10px;
+}
+
+.editor-section--notes textarea {
+  height: 60px;
+  min-height: 60px;
+}
+
+.recurrence-card {
+  gap: 9px;
+  margin: 0;
+  padding: 10px 11px;
+}
+
+.recurrence-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(250px, .92fr);
+  gap: 10px;
+  padding-top: 1px;
+  border-top: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+}
+
+.recurrence-config,
+.recurrence-results {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 8px;
+  padding-top: 9px;
+}
+
+.recurrence-results {
+  padding-left: 10px;
+  border-left: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+}
+
+.recurrence-preview {
+  max-height: 150px;
+  gap: 6px;
+  padding-block: 8px;
+}
+
+.recurrence-card .recurrence-meta,
+.recurrence-card .recurrence-preview__meta {
+  margin: 0;
+}
+
+.recurrence-card .recurrence-warning,
+.recurrence-card .recurrence-error {
+  margin: 0;
+}
+
+.lesson-editor .preset-chip,
+.lesson-editor .weekday-chip {
+  min-height: 40px;
+}
+
+@media (max-width: 760px) {
+
+  .lesson-overview-grid,
+  .lesson-details-grid,
+  .recurrence-body,
+  .recurrence-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .recurrence-results {
+    padding: 9px 0 0;
+    border-top: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+    border-left: 0;
+  }
+
+  .lesson-price-field {
+    align-self: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .modal {
+    padding: 0;
+  }
+
+  .modal__header {
+    padding: 18px 16px 13px;
+  }
+
+  .modal>form {
+    padding: 14px 16px 0;
+  }
+
+  .modal__actions {
+    bottom: 0;
+    margin: 16px -16px 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .editor-section,
+  .recurrence-card {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .modal__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .modal__actions .spacer {
+    display: none;
+  }
+
+  .modal__actions .button {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding-inline: 8px;
+    line-height: 1.2;
+    white-space: normal;
+  }
+
+  .modal__actions .button--danger {
+    grid-column: 1 / -1;
+  }
+
+  .time-picker__controls {
+    grid-template-columns: 40px minmax(0, 1fr) auto minmax(0, 1fr) 40px;
+  }
+
+  .weekday-selector>div {
+    gap: 3px;
+  }
+
+  .weekday-chip {
+    min-height: 40px;
+    padding-inline: 1px;
+  }
+}

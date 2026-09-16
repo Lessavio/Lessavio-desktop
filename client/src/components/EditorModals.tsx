@@ -9,9 +9,10 @@ interface ModalProps {
   eyebrow: string;
   children: ReactNode;
   onClose: () => void;
+  size?: "default" | "wide";
 }
 
-function Modal({ title, eyebrow, children, onClose }: ModalProps) {
+function Modal({ title, eyebrow, children, onClose, size = "default" }: ModalProps) {
   const { t } = useTranslation();
   useEffect(() => {
     const close = (event: KeyboardEvent) => event.key === "Escape" && onClose();
@@ -25,7 +26,7 @@ function Modal({ title, eyebrow, children, onClose }: ModalProps) {
 
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <section className={size === "wide" ? "modal modal--wide" : "modal"} role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <header className="modal__header">
           <div><p className="eyebrow">{eyebrow}</p><h2 id="modal-title">{title}</h2></div>
           <button className="icon-button" type="button" onClick={onClose} aria-label={t("common.close")}><X size={19} /></button>
@@ -566,106 +567,118 @@ export function LessonEditor({ lesson, presetDate, students, lessons, periods, c
   };
 
   return (
-    <Modal title={t(lesson ? "lessonForm.editTitle" : "lessonForm.newTitle")} eyebrow={t("lessonForm.eyebrow")} onClose={onClose}>
-      <form onSubmit={submit}>
-        <div className="form-section-title"><UserRound size={17} /><span>{t("lessonForm.studentSection")}</span></div>
-        <label className="field"><span>{t("lessonForm.student")}</span><select required value={form.studentId} onChange={(event) => selectStudent(event.target.value)}><option value="">{t("lessonForm.selectStudent")}</option>{students.filter((student) => !student.archived || student.id === lesson?.studentId).map((student) => <option key={student.id} value={student.id}>{studentName(student)}{student.archived ? t("lessonForm.archivedSuffix") : ""}</option>)}</select></label>
-        <div className="form-section-title"><CalendarDays size={17} /><span>{t("lessonForm.dateTime")}</span></div>
-        <div className="lesson-date-time">
-          <label className="field lesson-date-field"><span>{t(seriesMode ? "lessonForm.startDate" : "lessonForm.date")}</span><input required type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} /></label>
-          <div className="field lesson-time-field">
-            <span><Clock3 size={13} />{t("lessonForm.time")}</span>
-            <div className="time-picker" role="group" aria-label={t("lessonForm.time")}>
-              <div className="time-picker__controls">
-                <button className="picker-step" type="button" onClick={() => adjustTime(-5)} aria-label={t("lessonForm.earlier")}><Minus size={17} /></button>
-                <label className="time-picker__select"><span>{t("lessonForm.hour")}</span><select required aria-label={t("lessonForm.hour")} value={selectedHour} onChange={(event) => setTimePart(event.target.value, selectedMinute)}>{HOURS.map((hour) => <option key={hour} value={hour}>{hour}</option>)}</select></label>
-                <span className="time-picker__separator" aria-hidden="true">:</span>
-                <label className="time-picker__select"><span>{t("lessonForm.minute")}</span><select required aria-label={t("lessonForm.minute")} value={selectedMinute} onChange={(event) => setTimePart(selectedHour, event.target.value)}>{minuteOptions.map((minute) => <option key={minute} value={minute}>{minute}</option>)}</select></label>
-                <button className="picker-step" type="button" onClick={() => adjustTime(5)} aria-label={t("lessonForm.later")}><Plus size={17} /></button>
-              </div>
-              <div className="time-picker__quick" role="group" aria-label={t("lessonForm.quickTime")}>
-                <span>{t("lessonForm.quickTime")}</span>
-                <div>{QUICK_TIMES.map((time) => <button className={form.time === time ? "preset-chip preset-chip--active" : "preset-chip"} type="button" aria-pressed={form.time === time} key={time} onClick={() => setForm((current) => ({ ...current, time }))}>{time}</button>)}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        {!lesson && (
-          <div className="recurrence-card">
-            <label className="switch-row"><span><strong>{t("lessonForm.regularLesson")}</strong><small>{t("lessonForm.regularLessonDescription")}</small></span><input type="checkbox" checked={recurring} disabled={busy} onChange={(event) => setRecurring(event.target.checked)} /></label>
-            {seriesMode && (
-              <>
-                <fieldset className="weekday-selector">
-                  <legend>{t("lessonForm.weekdays")}</legend>
-                  <div role="group" aria-label={t("lessonForm.weekdays")}>
-                    {WEEKDAYS.map((weekday) => (
-                      <button
-                        className={selectedWeekdays.includes(weekday.value) ? "weekday-chip weekday-chip--active" : "weekday-chip"}
-                        type="button"
-                        aria-pressed={selectedWeekdays.includes(weekday.value)}
-                        key={weekday.value}
-                        onClick={() => toggleWeekday(weekday.value)}
-                      >
-                        {t(`calendar.weekdays.${weekday.key}`)}
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
-                <div className="recurrence-controls">
-                  <label className="field"><span>{t("lessonForm.interval")}</span><select required value={intervalWeeks} onChange={(event) => setIntervalWeeks(event.target.value as "1" | "2")}><option value="1">{t("lessonForm.everyWeek")}</option><option value="2">{t("lessonForm.everyTwoWeeks")}</option></select></label>
-                  <label className="field"><span>{t("lessonForm.endMode")}</span><select required value={endMode} onChange={(event) => setEndMode(event.target.value as "date" | "count")}><option value="date">{t("lessonForm.endOnDate")}</option><option value="count">{t("lessonForm.endAfterCount")}</option></select></label>
+    <Modal title={t(lesson ? "lessonForm.editTitle" : "lessonForm.newTitle")} eyebrow={t("lessonForm.eyebrow")} onClose={onClose} size="wide">
+      <form className="lesson-editor" onSubmit={submit}>
+        <section className="editor-section editor-section--schedule" aria-labelledby="lesson-schedule-section-title">
+          <div className="form-section-title"><UserRound size={17} /><span id="lesson-schedule-section-title">{t("lessonForm.studentSection")} · {t("lessonForm.dateTime")}</span></div>
+          <div className="lesson-overview-grid">
+            <label className="field lesson-student-field"><span>{t("lessonForm.student")}</span><select required value={form.studentId} onChange={(event) => selectStudent(event.target.value)}><option value="">{t("lessonForm.selectStudent")}</option>{students.filter((student) => !student.archived || student.id === lesson?.studentId).map((student) => <option key={student.id} value={student.id}>{studentName(student)}{student.archived ? t("lessonForm.archivedSuffix") : ""}</option>)}</select></label>
+            <label className="field lesson-date-field"><span>{t(seriesMode ? "lessonForm.startDate" : "lessonForm.date")}</span><input required type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} /></label>
+            <div className="field lesson-time-field">
+              <span><Clock3 size={13} />{t("lessonForm.time")}</span>
+              <div className="time-picker" role="group" aria-label={t("lessonForm.time")}>
+                <div className="time-picker__controls">
+                  <button className="picker-step" type="button" onClick={() => adjustTime(-5)} aria-label={t("lessonForm.earlier")}><Minus size={17} /></button>
+                  <label className="time-picker__select"><span>{t("lessonForm.hour")}</span><select required aria-label={t("lessonForm.hour")} value={selectedHour} onChange={(event) => setTimePart(event.target.value, selectedMinute)}>{HOURS.map((hour) => <option key={hour} value={hour}>{hour}</option>)}</select></label>
+                  <span className="time-picker__separator" aria-hidden="true">:</span>
+                  <label className="time-picker__select"><span>{t("lessonForm.minute")}</span><select required aria-label={t("lessonForm.minute")} value={selectedMinute} onChange={(event) => setTimePart(selectedHour, event.target.value)}>{minuteOptions.map((minute) => <option key={minute} value={minute}>{minute}</option>)}</select></label>
+                  <button className="picker-step" type="button" onClick={() => adjustTime(5)} aria-label={t("lessonForm.later")}><Plus size={17} /></button>
                 </div>
-                {endMode === "date" ? (
-                  <label className="field recurrence-end-field"><span>{t("lessonForm.endDate")}</span><input required type="date" min={form.date} value={seriesEndDate} onChange={(event) => setSeriesEndDate(event.target.value)} /><small>{t("lessonForm.endDateInclusive")}</small></label>
-                ) : (
-                  <label className="field recurrence-end-field"><span>{t("lessonForm.occurrenceCount")}</span><input required type="number" min="1" max="100" step="1" value={seriesCount} onChange={(event) => setSeriesCount(event.target.value)} /></label>
-                )}
-                <p className="recurrence-meta">{t("lessonForm.seriesModeHint", { timeZone })}</p>
-                {selectedWeekdays.length === 0 && <p className="recurrence-error" role="alert">{t("lessonForm.weekdaysRequired")}</p>}
-                {recurrence.tooMany && <p className="recurrence-error" role="alert">{t("lessonForm.seriesTooMany")}</p>}
-                {recurrence.invalidWallTime && <p className="recurrence-error" role="alert">{t("lessonForm.invalidLocalTime")}</p>}
-                {seriesInvalid && selectedWeekdays.length > 0 && !recurrence.tooMany && !recurrence.invalidWallTime && <p className="recurrence-error" role="alert">{t("errors.invalidLessonSeries")}</p>}
-                {!seriesInvalid && seriesConflict && (
-                  <div className="recurrence-warning" role="alert">
-                    <strong>{t("lessonForm.seriesConflict", { count: conflictingStarts.length })}</strong>
-                    <ul>{conflictingStarts.map((start) => <li key={start.iso}>{previewFormatter.format(start.date)}</li>)}</ul>
-                  </div>
-                )}
-                {!seriesInvalid && generatedStarts.length > 0 && (
-                  <div className="recurrence-preview-block">
-                    <div className="form-section-title"><CalendarDays size={15} /><span>{t("lessonForm.seriesPreview", { count: generatedStarts.length })}</span></div>
-                    <ol className="recurrence-preview">{previewStarts.map((start) => <li key={start.iso}>{previewFormatter.format(start.date)}</li>)}</ol>
-                    <p className="recurrence-preview__meta">{previewRemaining > 0 ? t("lessonForm.previewRemaining", { count: previewRemaining }) : t("lessonForm.previewComplete")} · {t("lessonForm.previewTimeZone", { timeZone })}</p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-        <div className="lesson-details-grid">
-          <div className="field duration-field">
-            <span><Clock3 size={13} />{t("lessonForm.duration")}</span>
-            <div className="duration-control">
-              <div className="duration-presets" role="group" aria-label={t("lessonForm.durationPresets")}>
-                <span>{t("lessonForm.durationPresets")}</span>
-                <div>{DURATION_PRESETS.map((minutes) => <button className={Number(form.durationMinutes) === minutes ? "preset-chip preset-chip--active" : "preset-chip"} type="button" aria-pressed={Number(form.durationMinutes) === minutes} key={minutes} onClick={() => setForm((current) => ({ ...current, durationMinutes: String(minutes) }))}>{minutes}</button>)}</div>
-              </div>
-              <div className="duration-stepper">
-                <button className="picker-step" type="button" onClick={() => adjustDuration(-5)} aria-label={t("lessonForm.decreaseDuration")}><Minus size={17} /></button>
-                <label className="duration-stepper__input"><span>{t("lessonForm.customDuration")}</span><input required type="number" min="15" max="480" step="1" value={form.durationMinutes} aria-label={t("lessonForm.customDuration")} onChange={(event) => setForm((current) => ({ ...current, durationMinutes: event.target.value }))} onBlur={() => setForm((current) => ({ ...current, durationMinutes: clampDuration(current.durationMinutes) }))} /></label>
-                <button className="picker-step" type="button" onClick={() => adjustDuration(5)} aria-label={t("lessonForm.increaseDuration")}><Plus size={17} /></button>
+                <div className="time-picker__quick" role="group" aria-label={t("lessonForm.quickTime")}>
+                  <span>{t("lessonForm.quickTime")}</span>
+                  <div>{QUICK_TIMES.map((time) => <button className={form.time === time ? "preset-chip preset-chip--active" : "preset-chip"} type="button" aria-pressed={form.time === time} key={time} onClick={() => setForm((current) => ({ ...current, time }))}>{time}</button>)}</div>
+                </div>
               </div>
             </div>
           </div>
-          <label className="field lesson-price-field"><span><Banknote size={13} />{t("lessonForm.price")}</span><div className="input-addon"><input required type="number" min="0" max="1000000" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} /><span>{currencySymbol(currency)}</span></div></label>
-        </div>
-        {!seriesMode && (
-          <>
-            <label className="field"><span>{t("lessonForm.status")}</span><select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as LessonStatus })}><option value="scheduled">{t("status.scheduled")}</option><option value="completed">{t("status.completed")}</option><option value="cancelled">{t("status.cancelled")}</option></select></label>
-            <label className={`switch-row switch-row--paid${automaticPayment ? " switch-row--automatic" : ""}`}><span><strong>{t("lessonForm.paid")}</strong><small>{automaticPayment ? t("lessonForm.automaticPayment", { month: formatPaymentMonth(automaticPayment.month, i18n.resolvedLanguage) }) : coverageHint}</small></span><input type="checkbox" checked={effectiveIsPaid} disabled={busy || Boolean(automaticPayment)} onChange={(event) => setForm({ ...form, manualPaid: event.target.checked })} /></label>
-          </>
+        </section>
+        {!lesson && (
+          <section className="recurrence-card" aria-labelledby="lesson-recurrence-section-title">
+            <label className="switch-row"><span><strong id="lesson-recurrence-section-title">{t("lessonForm.regularLesson")}</strong><small>{t("lessonForm.regularLessonDescription")}</small></span><input type="checkbox" checked={recurring} disabled={busy} onChange={(event) => setRecurring(event.target.checked)} /></label>
+            {seriesMode && (
+              <div className="recurrence-body">
+                <div className="recurrence-config">
+                  <fieldset className="weekday-selector">
+                    <legend>{t("lessonForm.weekdays")}</legend>
+                    <div role="group" aria-label={t("lessonForm.weekdays")}>
+                      {WEEKDAYS.map((weekday) => (
+                        <button
+                          className={selectedWeekdays.includes(weekday.value) ? "weekday-chip weekday-chip--active" : "weekday-chip"}
+                          type="button"
+                          aria-pressed={selectedWeekdays.includes(weekday.value)}
+                          key={weekday.value}
+                          onClick={() => toggleWeekday(weekday.value)}
+                        >
+                          {t(`calendar.weekdays.${weekday.key}`)}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                  <div className="recurrence-controls">
+                    <label className="field"><span>{t("lessonForm.interval")}</span><select required value={intervalWeeks} onChange={(event) => setIntervalWeeks(event.target.value as "1" | "2")}><option value="1">{t("lessonForm.everyWeek")}</option><option value="2">{t("lessonForm.everyTwoWeeks")}</option></select></label>
+                    <label className="field"><span>{t("lessonForm.endMode")}</span><select required value={endMode} onChange={(event) => setEndMode(event.target.value as "date" | "count")}><option value="date">{t("lessonForm.endOnDate")}</option><option value="count">{t("lessonForm.endAfterCount")}</option></select></label>
+                  </div>
+                  {endMode === "date" ? (
+                    <label className="field recurrence-end-field"><span>{t("lessonForm.endDate")}</span><input required type="date" min={form.date} value={seriesEndDate} onChange={(event) => setSeriesEndDate(event.target.value)} /><small>{t("lessonForm.endDateInclusive")}</small></label>
+                  ) : (
+                    <label className="field recurrence-end-field"><span>{t("lessonForm.occurrenceCount")}</span><input required type="number" min="1" max="100" step="1" value={seriesCount} onChange={(event) => setSeriesCount(event.target.value)} /></label>
+                  )}
+                  <p className="recurrence-meta">{t("lessonForm.seriesModeHint", { timeZone })}</p>
+                  {selectedWeekdays.length === 0 && <p className="recurrence-error" role="alert">{t("lessonForm.weekdaysRequired")}</p>}
+                  {recurrence.tooMany && <p className="recurrence-error" role="alert">{t("lessonForm.seriesTooMany")}</p>}
+                  {recurrence.invalidWallTime && <p className="recurrence-error" role="alert">{t("lessonForm.invalidLocalTime")}</p>}
+                  {seriesInvalid && selectedWeekdays.length > 0 && !recurrence.tooMany && !recurrence.invalidWallTime && <p className="recurrence-error" role="alert">{t("errors.invalidLessonSeries")}</p>}
+                </div>
+                <aside className="recurrence-results">
+                  {!seriesInvalid && seriesConflict && (
+                    <div className="recurrence-warning" role="alert">
+                      <strong>{t("lessonForm.seriesConflict", { count: conflictingStarts.length })}</strong>
+                      <ul>{conflictingStarts.map((start) => <li key={start.iso}>{previewFormatter.format(start.date)}</li>)}</ul>
+                    </div>
+                  )}
+                  {!seriesInvalid && generatedStarts.length > 0 && (
+                    <div className="recurrence-preview-block">
+                      <div className="form-section-title"><CalendarDays size={15} /><span>{t("lessonForm.seriesPreview", { count: generatedStarts.length })}</span></div>
+                      <ol className="recurrence-preview">{previewStarts.map((start) => <li key={start.iso}>{previewFormatter.format(start.date)}</li>)}</ol>
+                      <p className="recurrence-preview__meta">{previewRemaining > 0 ? t("lessonForm.previewRemaining", { count: previewRemaining }) : t("lessonForm.previewComplete")} · {t("lessonForm.previewTimeZone", { timeZone })}</p>
+                    </div>
+                  )}
+                </aside>
+              </div>
+            )}
+          </section>
         )}
-        <label className="field"><span>{t("lessonForm.notes")}</span><textarea rows={3} maxLength={2000} value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder={t("lessonForm.notesPlaceholder")} /></label>
+        <section className="editor-section editor-section--details" aria-labelledby="lesson-details-section-title">
+          <div className="form-section-title"><Banknote size={17} /><span id="lesson-details-section-title">{t("lessonForm.duration")} · {t("lessonForm.price")}</span></div>
+          <div className="lesson-details-grid">
+            <div className="field duration-field">
+              <span><Clock3 size={13} />{t("lessonForm.duration")}</span>
+              <div className="duration-control">
+                <div className="duration-presets" role="group" aria-label={t("lessonForm.durationPresets")}>
+                  <span>{t("lessonForm.durationPresets")}</span>
+                  <div>{DURATION_PRESETS.map((minutes) => <button className={Number(form.durationMinutes) === minutes ? "preset-chip preset-chip--active" : "preset-chip"} type="button" aria-pressed={Number(form.durationMinutes) === minutes} key={minutes} onClick={() => setForm((current) => ({ ...current, durationMinutes: String(minutes) }))}>{minutes}</button>)}</div>
+                </div>
+                <div className="duration-stepper">
+                  <button className="picker-step" type="button" onClick={() => adjustDuration(-5)} aria-label={t("lessonForm.decreaseDuration")}><Minus size={17} /></button>
+                  <label className="duration-stepper__input"><span>{t("lessonForm.customDuration")}</span><input required type="number" min="15" max="480" step="1" value={form.durationMinutes} aria-label={t("lessonForm.customDuration")} onChange={(event) => setForm((current) => ({ ...current, durationMinutes: event.target.value }))} onBlur={() => setForm((current) => ({ ...current, durationMinutes: clampDuration(current.durationMinutes) }))} /></label>
+                  <button className="picker-step" type="button" onClick={() => adjustDuration(5)} aria-label={t("lessonForm.increaseDuration")}><Plus size={17} /></button>
+                </div>
+              </div>
+            </div>
+            <div className="lesson-details-side">
+              <label className="field lesson-price-field"><span><Banknote size={13} />{t("lessonForm.price")}</span><div className="input-addon"><input required type="number" min="0" max="1000000" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} /><span>{currencySymbol(currency)}</span></div></label>
+              {!seriesMode && (
+                <>
+                  <label className="field"><span>{t("lessonForm.status")}</span><select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as LessonStatus })}><option value="scheduled">{t("status.scheduled")}</option><option value="completed">{t("status.completed")}</option><option value="cancelled">{t("status.cancelled")}</option></select></label>
+                  <label className={`switch-row switch-row--paid${automaticPayment ? " switch-row--automatic" : ""}`}><span><strong>{t("lessonForm.paid")}</strong><small>{automaticPayment ? t("lessonForm.automaticPayment", { month: formatPaymentMonth(automaticPayment.month, i18n.resolvedLanguage) }) : coverageHint}</small></span><input type="checkbox" checked={effectiveIsPaid} disabled={busy || Boolean(automaticPayment)} onChange={(event) => setForm({ ...form, manualPaid: event.target.checked })} /></label>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+        <section className="editor-section editor-section--notes" aria-labelledby="lesson-notes-section-title">
+          <label className="field"><span id="lesson-notes-section-title">{t("lessonForm.notes")}</span><textarea rows={3} maxLength={2000} value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder={t("lessonForm.notesPlaceholder")} /></label>
+        </section>
         <footer className="modal__actions">
           {lesson && <button className="button button--danger button--small" disabled={busy} type="button" onClick={remove}><Trash2 size={15} />{t("common.delete")}</button>}
           <span className="spacer" />
