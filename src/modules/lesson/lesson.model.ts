@@ -11,6 +11,7 @@ export interface Lesson {
   status: LessonStatus;
   isPaid: boolean;
   paidAt: Date | null;
+  paymentPeriodId: string | null;
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;

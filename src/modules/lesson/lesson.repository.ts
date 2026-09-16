@@ -1,6 +1,7 @@
 import { QueryResultRow } from "pg";
 import { isPositivePostgresBigintId } from "../../common/postgres-bigint-id";
 import { pool, QueryExecutor, withTransaction } from "../../database";
+import { reconcilePaymentPeriod } from "../payment-period/reconcile-payment-period";
 import {
   CreateLessonDto,
   Lesson,
@@ -19,6 +20,7 @@ interface LessonRow extends QueryResultRow {
   status: LessonStatus;
   is_paid: boolean;
   paid_at: Date | null;
+  payment_period_id: string | null;
   notes: string | null;
   created_at: Date;
   updated_at: Date;
@@ -31,7 +33,7 @@ export interface UpdateLessonResult {
 
 const LESSON_COLUMNS = `
   id, owner_id, student_id, starts_at, duration_minutes, price, status,
-  is_paid, paid_at, notes, created_at, updated_at
+  is_paid, paid_at, payment_period_id, notes, created_at, updated_at
 `;
 
 function mapLesson(row: LessonRow): Lesson {
@@ -45,6 +47,7 @@ function mapLesson(row: LessonRow): Lesson {
     status: row.status,
     isPaid: row.is_paid,
     paidAt: row.paid_at,
+    paymentPeriodId: row.payment_period_id,
     notes: row.notes,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -91,6 +94,34 @@ async function hasConflict(
     [ownerId, startsAt, durationMinutes, safeExcludeId ?? null]
   );
   return result.rows[0].exists;
+}
+
+interface CoveringPaymentPeriod extends QueryResultRow {
+  id: string;
+  paid_at: Date;
+}
+
+async function findCoveringPaymentPeriod(
+  executor: QueryExecutor,
+  ownerId: string,
+  studentId: string,
+  startsAt: Date,
+  status: LessonStatus
+): Promise<CoveringPaymentPeriod | undefined> {
+  if (status === "cancelled") return undefined;
+
+  const result = await executor.query<CoveringPaymentPeriod>(
+    `SELECT id, paid_at
+     FROM payment_periods
+     WHERE owner_id = $1
+       AND student_id = $2
+       AND starts_at <= $3
+       AND ends_at > $3
+     ORDER BY starts_at DESC, id DESC
+     LIMIT 1`,
+    [ownerId, studentId, startsAt]
+  );
+  return result.rows[0];
 }
 
 export const lessonRepository = {
@@ -167,12 +198,11 @@ export const lessonRepository = {
       ) {
         return undefined;
       }
-      const paidAt = dto.isPaid ? new Date() : null;
       const result = await client.query<LessonRow>(
         `INSERT INTO lessons
           (owner_id, student_id, starts_at, duration_minutes, price, status,
-           is_paid, paid_at, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+           is_paid, paid_at, payment_period_id, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULL, $9)
          RETURNING ${LESSON_COLUMNS}`,
         [
           ownerId,
@@ -182,11 +212,19 @@ export const lessonRepository = {
           dto.price,
           dto.status,
           dto.isPaid,
-          paidAt,
+          dto.isPaid ? new Date() : null,
           dto.notes,
         ]
       );
-      return mapLesson(result.rows[0]);
+      const period = await findCoveringPaymentPeriod(
+        client,
+        ownerId,
+        dto.studentId,
+        dto.startsAt,
+        dto.status
+      );
+      if (period) await reconcilePaymentPeriod(client, ownerId, period.id);
+      return findById(client, ownerId, result.rows[0].id);
     });
   },
 
@@ -203,6 +241,7 @@ export const lessonRepository = {
       const current = await findById(client, ownerId, id);
       if (!current) return { conflict: false };
 
+      const studentId = dto.studentId ?? current.studentId;
       const startsAt = dto.startsAt ?? current.startsAt;
       const durationMinutes = dto.durationMinutes ?? current.durationMinutes;
       const status = dto.status ?? current.status;
@@ -213,35 +252,71 @@ export const lessonRepository = {
         return { conflict: true };
       }
 
-      const paidAt = dto.isPaid === undefined
-        ? current.paidAt
-        : dto.isPaid
-          ? current.paidAt ?? new Date()
-          : null;
-      const columnByField: Record<keyof UpdateLessonDto, string> = {
+      const oldPaymentPeriodId = current.paymentPeriodId;
+      const oldCoveringPeriod = await findCoveringPaymentPeriod(
+        client,
+        ownerId,
+        current.studentId,
+        current.startsAt,
+        current.status
+      );
+      const manualIsPaid = dto.isPaid
+        ?? (current.paymentPeriodId === null && current.isPaid);
+      const keepsManualTimestamp = manualIsPaid
+        && current.paymentPeriodId === null
+        && current.isPaid;
+      const manualPaidAt = manualIsPaid
+        ? (keepsManualTimestamp ? current.paidAt ?? new Date() : new Date())
+        : null;
+      const columnByField: Record<string, string> = {
         studentId: "student_id",
         startsAt: "starts_at",
         durationMinutes: "duration_minutes",
         price: "price",
         status: "status",
-        isPaid: "is_paid",
         notes: "notes",
       };
-      const entries = Object.entries(dto) as [keyof UpdateLessonDto, unknown][];
+      const entries = (Object.entries(dto) as [keyof UpdateLessonDto, unknown][])
+        .filter(([field]) => field !== "isPaid");
       const values: unknown[] = [ownerId, id];
-      const assignments = entries.map(([field, value], index) => {
+      const assignments = entries.map(([field, value]) => {
         values.push(value);
-        return `${columnByField[field]} = $${index + 3}`;
+        return `${columnByField[field]} = $${values.length}`;
       });
-      values.push(paidAt);
+      values.push(null);
+      assignments.push(`payment_period_id = $${values.length}`);
+      values.push(manualIsPaid);
+      assignments.push(`is_paid = $${values.length}`);
+      values.push(manualPaidAt);
+      assignments.push(`paid_at = $${values.length}`);
+      assignments.push("updated_at = now()");
       const result = await client.query<LessonRow>(
         `UPDATE lessons
-         SET ${assignments.join(", ")}, paid_at = $${values.length}, updated_at = now()
+         SET ${assignments.join(", ")}
          WHERE owner_id = $1 AND id = $2
          RETURNING ${LESSON_COLUMNS}`,
         values
       );
-      return { lesson: result.rows[0] ? mapLesson(result.rows[0]) : undefined, conflict: false };
+      if (!result.rows[0]) return { conflict: false };
+
+      const periodIds = new Set<string>();
+      if (oldPaymentPeriodId) periodIds.add(oldPaymentPeriodId);
+      if (oldCoveringPeriod) periodIds.add(oldCoveringPeriod.id);
+      const finalPeriod = await findCoveringPaymentPeriod(
+        client,
+        ownerId,
+        studentId,
+        startsAt,
+        status
+      );
+      if (finalPeriod) periodIds.add(finalPeriod.id);
+      for (const periodId of periodIds) {
+        await reconcilePaymentPeriod(client, ownerId, periodId);
+      }
+      return {
+        lesson: await findById(client, ownerId, id),
+        conflict: false,
+      };
     });
   },
 
@@ -250,11 +325,29 @@ export const lessonRepository = {
       return false;
     }
 
-    const result = await pool.query(
-      "DELETE FROM lessons WHERE owner_id = $1 AND id = $2",
-      [ownerId, id]
-    );
-    return result.rowCount === 1;
+    return withTransaction(async (client) => {
+      await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [ownerId]);
+      const lesson = await findById(client, ownerId, id);
+      if (!lesson) return false;
+      const coveringPeriod = await findCoveringPaymentPeriod(
+        client,
+        ownerId,
+        lesson.studentId,
+        lesson.startsAt,
+        lesson.status
+      );
+
+      const result = await client.query(
+        "DELETE FROM lessons WHERE owner_id = $1 AND id = $2",
+        [ownerId, id]
+      );
+      if (result.rowCount !== 1) return false;
+      const periodId = lesson.paymentPeriodId ?? coveringPeriod?.id;
+      if (periodId) {
+        await reconcilePaymentPeriod(client, ownerId, periodId);
+      }
+      return true;
+    });
   },
 
   async claimOwnerless(ownerId: string): Promise<number> {

@@ -3,6 +3,7 @@ import path from "path";
 import { errorMiddleware } from "./common/middlewares/error.middleware";
 import { requireAuth } from "./common/middlewares/auth.middleware";
 import { lessonRouter } from "./modules/lesson/lesson.router";
+import { paymentPeriodRouter } from "./modules/payment-period/payment-period.router";
 import { studentRouter } from "./modules/student/student.router";
 import { authRouter } from "./modules/user/user.router";
 
@@ -17,6 +18,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/students", requireAuth, studentRouter);
 app.use("/api/lessons", requireAuth, lessonRouter);
+app.use("/api/payment-periods", requireAuth, paymentPeriodRouter);
 
 app.use("/api", (_req, res) => {
     res.status(404).json({ status: "error", message: "API-маршрут не найден" });

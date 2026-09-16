@@ -2500,3 +2500,247 @@ h2 {
     gap: 10px;
   }
 }
+
+.payment-periods {
+  margin: 7px 0 17px;
+  padding: 15px;
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, var(--border));
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--primary-soft) 42%, var(--surface));
+}
+
+.payment-periods .form-section-title {
+  margin-top: 0;
+}
+
+.payment-periods__intro,
+.payment-periods__empty {
+  margin: -3px 0 13px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.payment-periods__add {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr) auto;
+  align-items: end;
+  gap: 9px;
+}
+
+.payment-periods__add .field {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.payment-periods__add .button {
+  min-height: 43px;
+}
+
+.payment-periods__hint,
+.payment-periods__timezone {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.payment-periods__timezone {
+  margin-top: 2px;
+}
+
+.payment-periods__list {
+  display: grid;
+  gap: 9px;
+  margin: 13px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.payment-periods__list>li {
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+}
+
+.payment-period__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.payment-period__header>span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.payment-period__header strong {
+  color: var(--text);
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.payment-period__header small,
+.payment-entry__date {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.payment-period__coverage {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.payment-period__coverage span {
+  padding: 7px;
+  border-radius: 8px;
+  color: var(--text-soft);
+  background: var(--surface-soft);
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.payment-period__history-title {
+  margin: 11px 0 6px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.payment-period__history {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.payment-entry {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) auto auto;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 7px 8px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--primary-soft) 25%, var(--surface));
+}
+
+.payment-entry__date {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.payment-entry__amount {
+  color: var(--text);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.payment-entry__actions,
+.payment-entry__edit {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.payment-entry__actions .button,
+.payment-entry__edit .button {
+  min-height: 31px;
+  padding: 6px 9px;
+  font-size: 9px;
+}
+
+.payment-entry__edit {
+  grid-column: 2 / -1;
+}
+
+.payment-entry__edit .input-addon {
+  width: min(145px, 100%);
+}
+
+.payment-entry__edit input {
+  min-height: 33px;
+  padding-block: 6px;
+}
+
+.payment-periods__delete {
+  flex: 0 0 auto;
+  color: var(--danger);
+}
+
+.payment-periods__empty {
+  margin: 13px 0 0;
+  padding: 11px;
+  border: 1px dashed var(--border);
+  border-radius: 11px;
+  text-align: center;
+}
+
+.switch-row--automatic {
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+  background: color-mix(in srgb, var(--primary-soft) 50%, var(--surface));
+}
+
+.switch-row input:disabled,
+.payment-periods button:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+@media (max-width: 560px) {
+  .payment-periods {
+    padding: 12px;
+  }
+
+  .payment-periods__add {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-periods__add .button {
+    width: 100%;
+  }
+
+  .payment-period__coverage {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-entry {
+    grid-template-columns: 1fr auto;
+  }
+
+  .payment-entry__date {
+    grid-column: 1 / -1;
+  }
+
+  .payment-entry__edit {
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+  }
+
+  .payment-entry__edit .input-addon {
+    width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+
+  .payment-entry__amount,
+  .payment-entry__actions {
+    grid-column: 1 / -1;
+  }
+
+  .payment-entry__actions {
+    justify-content: flex-start;
+  }
+}

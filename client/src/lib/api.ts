@@ -3,6 +3,9 @@ import type {
   Lesson,
   LessonPayload,
   LoginPayload,
+  PaymentEntryPayload,
+  PaymentPeriod,
+  PaymentPeriodPayload,
   RegisterPayload,
   Student,
   StudentPayload,
@@ -64,5 +67,17 @@ export const api = {
     update: (id: string, payload: LessonPayload) =>
       request<Lesson>(`/api/lessons/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
     delete: (id: string) => request<void>(`/api/lessons/${id}`, { method: "DELETE" }),
+  },
+  paymentPeriods: {
+    list: () => request<PaymentPeriod[]>("/api/payment-periods"),
+    create: (payload: PaymentPeriodPayload) =>
+      request<PaymentPeriod>("/api/payment-periods", { method: "POST", body: JSON.stringify(payload) }),
+    delete: (id: string) => request<void>(`/api/payment-periods/${id}`, { method: "DELETE" }),
+    addPayment: (periodId: string, payload: PaymentEntryPayload) =>
+      request<PaymentPeriod>(`/api/payment-periods/${periodId}/payments`, { method: "POST", body: JSON.stringify(payload) }),
+    updatePayment: (periodId: string, paymentId: string, payload: PaymentEntryPayload) =>
+      request<PaymentPeriod>(`/api/payment-periods/${periodId}/payments/${paymentId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+    deletePayment: (periodId: string, paymentId: string) =>
+      request<void>(`/api/payment-periods/${periodId}/payments/${paymentId}`, { method: "DELETE" }),
   },
 };

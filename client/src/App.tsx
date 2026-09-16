@@ -12,7 +12,7 @@ import { Calendar } from "./pages/Calendar";
 import { Dashboard } from "./pages/Dashboard";
 import { Students } from "./pages/Students";
 import { Profile } from "./pages/Profile";
-import type { AuthUser, Lesson, LessonPayload, Student, StudentPayload, Theme, View } from "./types";
+import type { AuthUser, Lesson, LessonPayload, PaymentEntryPayload, PaymentPeriod, PaymentPeriodPayload, Student, StudentPayload, Theme, View } from "./types";
 
 type StudentModal = { student?: Student } | null;
 type LessonModal = { lesson?: Lesson; presetDate?: Date } | null;
@@ -40,6 +40,7 @@ export function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [paymentPeriods, setPaymentPeriods] = useState<PaymentPeriod[]>([]);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [sessionError, setSessionError] = useState(false);
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
@@ -58,6 +59,7 @@ export function App() {
     setUser(null);
     setStudents([]);
     setLessons([]);
+    setPaymentPeriods([]);
     setStudentModal(null);
     setLessonModal(null);
     setWorkspaceError(false);
@@ -70,9 +72,14 @@ export function App() {
     setWorkspaceLoading(true);
     setWorkspaceError(false);
     try {
-      const [nextStudents, nextLessons] = await Promise.all([api.students.list(), api.lessons.list()]);
+      const [nextStudents, nextLessons, nextPaymentPeriods] = await Promise.all([
+        api.students.list(),
+        api.lessons.list(),
+        api.paymentPeriods.list(),
+      ]);
       setStudents(nextStudents);
       setLessons(nextLessons);
+      setPaymentPeriods(nextPaymentPeriods);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         clearSession();
@@ -195,6 +202,77 @@ export function App() {
     }
   };
 
+  const createPaymentPeriod = async (payload: PaymentPeriodPayload) => {
+    setBusy(true);
+    try {
+      await api.paymentPeriods.create(payload);
+      notify(t("toast.paymentRecorded"));
+      await loadWorkspace();
+    } catch (error) {
+      handleMutationError(error, "errors.savePaymentPeriodFailed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const addPayment = async (periodId: string, payload: PaymentEntryPayload) => {
+    setBusy(true);
+    try {
+      await api.paymentPeriods.addPayment(periodId, payload);
+      notify(t("toast.paymentAdded"));
+      await loadWorkspace();
+      return true;
+    } catch (error) {
+      handleMutationError(error, "errors.savePaymentFailed");
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const updatePayment = async (periodId: string, paymentId: string, payload: PaymentEntryPayload) => {
+    setBusy(true);
+    try {
+      await api.paymentPeriods.updatePayment(periodId, paymentId, payload);
+      notify(t("toast.paymentUpdated"));
+      await loadWorkspace();
+      return true;
+    } catch (error) {
+      handleMutationError(error, "errors.updatePaymentFailed");
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deletePayment = async (periodId: string, paymentId: string) => {
+    setBusy(true);
+    try {
+      await api.paymentPeriods.deletePayment(periodId, paymentId);
+      notify(t("toast.paymentDeleted"));
+      await loadWorkspace();
+      return true;
+    } catch (error) {
+      handleMutationError(error, "errors.deletePaymentFailed");
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deletePaymentPeriod = async (id: string) => {
+    setBusy(true);
+    try {
+      await api.paymentPeriods.delete(id);
+      notify(t("toast.paymentPeriodDeleted"));
+      await loadWorkspace();
+    } catch (error) {
+      handleMutationError(error, "errors.deletePaymentPeriodFailed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const saveLesson = async (payload: LessonPayload) => {
     setBusy(true);
     try {
@@ -251,7 +329,7 @@ export function App() {
   ) : view === "students" ? (
     <Students students={students} lessons={lessons} currency={currency} onOpenStudent={(student) => setStudentModal({ student })} onAddStudent={() => setStudentModal({})} />
   ) : (
-    <Dashboard students={students} lessons={lessons} currency={currency} onOpenLesson={(lesson) => openLesson(lesson)} onAddLesson={() => openLesson()} onViewChange={navigate} />
+    <Dashboard students={students} lessons={lessons} paymentPeriods={paymentPeriods} currency={currency} onOpenLesson={(lesson) => openLesson(lesson)} onAddLesson={() => openLesson()} onViewChange={navigate} />
   );
 
   return (
@@ -273,11 +351,18 @@ export function App() {
         <StudentEditor
           key={studentModal.student?.id || "new-student"}
           student={studentModal.student}
+          lessons={studentModal.student ? lessons.filter((lesson) => lesson.studentId === studentModal.student?.id) : []}
+          periods={studentModal.student ? paymentPeriods.filter((period) => period.studentId === studentModal.student?.id) : []}
           currency={currency}
           busy={busy}
           onClose={() => !busy && setStudentModal(null)}
           onSave={saveStudent}
           onDelete={deleteStudent}
+          onCreatePaymentPeriod={createPaymentPeriod}
+          onAddPayment={addPayment}
+          onUpdatePayment={updatePayment}
+          onDeletePayment={deletePayment}
+          onDeletePaymentPeriod={deletePaymentPeriod}
         />
       )}
       {lessonModal && (
@@ -286,6 +371,7 @@ export function App() {
           lesson={lessonModal.lesson}
           presetDate={lessonModal.presetDate}
           students={students}
+          periods={paymentPeriods}
           currency={currency}
           busy={busy}
           onClose={() => !busy && setLessonModal(null)}

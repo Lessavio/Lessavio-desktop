@@ -26,6 +26,43 @@ export interface StudentPayload {
   archived?: boolean;
 }
 
+export interface PaymentEntry {
+  id: string;
+  ownerId: string;
+  studentId: string;
+  paymentPeriodId: string;
+  amount: number;
+  paidAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentPeriod {
+  id: string;
+  ownerId: string;
+  studentId: string;
+  month: string;
+  timeZone: string;
+  amount: number;
+  startsAt: string;
+  endsAt: string;
+  paidAt: string;
+  payments: PaymentEntry[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentPeriodPayload {
+  studentId: string;
+  month: string;
+  timeZone: string;
+  amount: number;
+}
+
+export interface PaymentEntryPayload {
+  amount: number;
+}
+
 export interface Lesson {
   id: string;
   studentId: string;
@@ -35,6 +72,7 @@ export interface Lesson {
   status: LessonStatus;
   isPaid: boolean;
   paidAt: string | null;
+  paymentPeriodId: string | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;

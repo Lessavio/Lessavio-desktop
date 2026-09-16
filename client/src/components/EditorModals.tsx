@@ -1,8 +1,8 @@
-import { Banknote, CalendarDays, Clock3, Minus, Plus, Trash2, UserRound, X } from "lucide-react";
+import { Banknote, CalendarDays, Clock3, Minus, Plus, Trash2, UserRound, WalletCards, X } from "lucide-react";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { currencySymbol, dateKey, studentName } from "../lib/format";
-import type { Currency, Lesson, LessonPayload, LessonStatus, Student, StudentPayload } from "../types";
+import { currencySymbol, dateKey, formatCurrency, studentName } from "../lib/format";
+import type { Currency, Lesson, LessonPayload, LessonStatus, PaymentEntry, PaymentEntryPayload, PaymentPeriod, PaymentPeriodPayload, Student, StudentPayload } from "../types";
 
 interface ModalProps {
   title: string;
@@ -36,17 +36,67 @@ function Modal({ title, eyebrow, children, onClose }: ModalProps) {
   );
 }
 
+function currentLocalMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function paymentPeriodPayload(studentId: string, month: string, amount: number): PaymentPeriodPayload {
+  return {
+    studentId,
+    month,
+    amount,
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  };
+}
+
+function formatPaymentMonth(month: string, locale: string | undefined): string {
+  const [year, monthNumber] = month.split("-").map(Number);
+  return new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" })
+    .format(new Date(year, monthNumber - 1, 1));
+}
+
+function paymentAmount(value: string): number | null {
+  const amount = Number(value.replace(",", "."));
+  return Number.isFinite(amount) && amount >= 0.01 && amount <= 1_000_000 ? amount : null;
+}
+
 interface StudentEditorProps {
   student?: Student;
+  lessons: Lesson[];
+  periods: PaymentPeriod[];
   currency: Currency;
   busy: boolean;
   onClose: () => void;
   onSave: (payload: StudentPayload) => Promise<void>;
   onDelete: () => Promise<void>;
+  onCreatePaymentPeriod: (payload: PaymentPeriodPayload) => Promise<void>;
+  onAddPayment: (periodId: string, payload: PaymentEntryPayload) => Promise<boolean>;
+  onUpdatePayment: (periodId: string, paymentId: string, payload: PaymentEntryPayload) => Promise<boolean>;
+  onDeletePayment: (periodId: string, paymentId: string) => Promise<boolean>;
+  onDeletePaymentPeriod: (id: string) => Promise<void>;
 }
 
-export function StudentEditor({ student, currency, busy, onClose, onSave, onDelete }: StudentEditorProps) {
-  const { t } = useTranslation();
+export function StudentEditor({
+  student,
+  lessons,
+  periods,
+  currency,
+  busy,
+  onClose,
+  onSave,
+  onDelete,
+  onCreatePaymentPeriod,
+  onAddPayment,
+  onUpdatePayment,
+  onDeletePayment,
+  onDeletePaymentPeriod,
+}: StudentEditorProps) {
+  const { t, i18n } = useTranslation();
+  const [selectedMonth, setSelectedMonth] = useState(currentLocalMonth);
+  const [newPaymentAmount, setNewPaymentAmount] = useState(String(student?.defaultLessonPrice ?? ""));
+  const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
+  const [editingAmount, setEditingAmount] = useState("");
   const [form, setForm] = useState({
     firstName: student?.firstName || "",
     lastName: student?.lastName || "",
@@ -55,6 +105,13 @@ export function StudentEditor({ student, currency, busy, onClose, onSave, onDele
     notes: student?.notes || "",
     color: student?.color || "#6254d9",
     archived: student?.archived || false,
+  });
+  const sortedPeriods = [...periods].sort((left, right) => right.month.localeCompare(left.month));
+  const selectedPeriod = periods.find((period) => period.month === selectedMonth);
+  const newAmount = paymentAmount(newPaymentAmount);
+  const dateFormatter = new Intl.DateTimeFormat(i18n.resolvedLanguage, {
+    dateStyle: "medium",
+    timeStyle: "short",
   });
 
   const submit = async (event: FormEvent) => {
@@ -74,6 +131,39 @@ export function StudentEditor({ student, currency, busy, onClose, onSave, onDele
     if (window.confirm(t("studentForm.deleteConfirm"))) await onDelete();
   };
 
+  const recordPayment = async () => {
+    if (!student || !selectedMonth || newAmount === null) return;
+    if (selectedPeriod) {
+      await onAddPayment(selectedPeriod.id, { amount: newAmount });
+    } else {
+      await onCreatePaymentPeriod(paymentPeriodPayload(student.id, selectedMonth, newAmount));
+    }
+  };
+
+  const beginPaymentEdit = (payment: PaymentEntry) => {
+    setEditingPaymentId(payment.id);
+    setEditingAmount(String(payment.amount));
+  };
+
+  const savePaymentEdit = async (periodId: string, paymentId: string) => {
+    const amount = paymentAmount(editingAmount);
+    if (amount === null) return;
+    if (await onUpdatePayment(periodId, paymentId, { amount })) setEditingPaymentId(null);
+  };
+
+  const removePayment = async (period: PaymentPeriod, payment: PaymentEntry) => {
+    const amount = formatCurrency(payment.amount, i18n.resolvedLanguage, currency);
+    const date = dateFormatter.format(new Date(payment.paidAt));
+    if (window.confirm(t("studentForm.paymentDeleteConfirm", { amount, date }))) {
+      await onDeletePayment(period.id, payment.id);
+    }
+  };
+
+  const removePeriod = async (period: PaymentPeriod) => {
+    const month = formatPaymentMonth(period.month, i18n.resolvedLanguage);
+    if (window.confirm(t("studentForm.paymentPeriodDeleteConfirm", { month }))) await onDeletePaymentPeriod(period.id);
+  };
+
   return (
     <Modal title={t(student ? "studentForm.editTitle" : "studentForm.newTitle")} eyebrow={t("studentForm.eyebrow")} onClose={onClose}>
       <form onSubmit={submit}>
@@ -88,6 +178,72 @@ export function StudentEditor({ student, currency, busy, onClose, onSave, onDele
         </div>
         <label className="field"><span>{t("studentForm.calendarColor")}</span><div className="color-picker"><input type="color" value={form.color} onChange={(event) => setForm({ ...form, color: event.target.value })} /><span style={{ background: form.color }} /><strong>{form.color.toUpperCase()}</strong></div></label>
         <label className="field"><span>{t("studentForm.notes")}</span><textarea rows={3} maxLength={2000} value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder={t("studentForm.notesPlaceholder")} /></label>
+        {student && (
+          <section className="payment-periods" aria-labelledby="payment-periods-title" aria-busy={busy}>
+            <div className="form-section-title"><WalletCards size={17} /><span id="payment-periods-title">{t("studentForm.monthlyPayments")}</span></div>
+            <p className="payment-periods__intro">{t("studentForm.monthlyPaymentsDescription")}</p>
+            <div className="payment-periods__add">
+              <label className="field"><span>{t("studentForm.paymentMonth")}</span><input type="month" value={selectedMonth} disabled={busy} onChange={(event) => setSelectedMonth(event.target.value)} /></label>
+              <label className="field"><span>{t("studentForm.paymentAmount")}</span><div className="input-addon"><input type="text" inputMode="decimal" value={newPaymentAmount} disabled={busy} aria-invalid={newPaymentAmount !== "" && newAmount === null} onChange={(event) => setNewPaymentAmount(event.target.value)} /><span>{currencySymbol(currency)}</span></div></label>
+              <button className="button button--primary button--small" type="button" disabled={busy || !selectedMonth || newAmount === null} onClick={() => void recordPayment()}><Plus size={15} />{t(selectedPeriod ? "studentForm.addPayment" : "studentForm.recordPayment")}</button>
+            </div>
+            <small className="payment-periods__hint">{t("studentForm.paymentAmountHint")}</small>
+            <small className="payment-periods__timezone">{t("studentForm.paymentTimeZone", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })}</small>
+            {sortedPeriods.length > 0 ? (
+              <ul className="payment-periods__list">
+                {sortedPeriods.map((period) => {
+                  const payments = [...period.payments].sort((left, right) => right.paidAt.localeCompare(left.paidAt));
+                  const total = payments.reduce((sum, payment) => sum + payment.amount, 0);
+                  const month = formatPaymentMonth(period.month, i18n.resolvedLanguage);
+                  const linkedLessons = lessons.filter((lesson) => lesson.paymentPeriodId === period.id);
+                  const linkedTotal = linkedLessons.reduce((sum, lesson) => sum + lesson.price, 0);
+                  const remaining = Math.max(total - linkedTotal, 0);
+                  return (
+                    <li className="payment-period" key={period.id}>
+                      <header className="payment-period__header">
+                        <span><strong>{month}</strong><small>{t("studentForm.paymentTotal", { total: formatCurrency(total, i18n.resolvedLanguage, currency) })} · {period.timeZone}</small></span>
+                        <button className="icon-button payment-periods__delete" type="button" disabled={busy} onClick={() => void removePeriod(period)} aria-label={t("studentForm.deletePaymentPeriodForMonth", { month })}><Trash2 size={16} /></button>
+                      </header>
+                      <div className="payment-period__coverage">
+                        <span>{t("studentForm.linkedLessons", { count: linkedLessons.length })}</span>
+                        <span>{t("studentForm.linkedPrice", { total: formatCurrency(linkedTotal, i18n.resolvedLanguage, currency) })}</span>
+                        <span>{t("studentForm.remainingBalance", { remaining: formatCurrency(remaining, i18n.resolvedLanguage, currency) })}</span>
+                      </div>
+                      <p className="payment-period__history-title">{t("studentForm.paymentHistory")}</p>
+                      <ul className="payment-period__history" aria-label={t("studentForm.paymentHistoryForMonth", { month })}>
+                        {payments.map((payment) => {
+                          const editing = editingPaymentId === payment.id;
+                          const formattedDate = dateFormatter.format(new Date(payment.paidAt));
+                          const validEditingAmount = paymentAmount(editingAmount);
+                          return (
+                            <li className="payment-entry" key={payment.id}>
+                              <span className="payment-entry__date">{formattedDate}</span>
+                              {editing ? (
+                                <div className="payment-entry__edit">
+                                  <div className="input-addon"><input autoFocus type="text" inputMode="decimal" value={editingAmount} disabled={busy} aria-label={t("studentForm.paymentEditAmount")} aria-invalid={editingAmount !== "" && validEditingAmount === null} onChange={(event) => setEditingAmount(event.target.value)} /><span>{currencySymbol(currency)}</span></div>
+                                  <button className="button button--primary button--small" type="button" disabled={busy || validEditingAmount === null} onClick={() => void savePaymentEdit(period.id, payment.id)}>{t("common.save")}</button>
+                                  <button className="button button--secondary button--small" type="button" disabled={busy} onClick={() => setEditingPaymentId(null)}>{t("common.cancel")}</button>
+                                </div>
+                              ) : (
+                                <>
+                                  <strong className="payment-entry__amount">{formatCurrency(payment.amount, i18n.resolvedLanguage, currency)}</strong>
+                                  <div className="payment-entry__actions">
+                                    <button className="button button--secondary button--small" type="button" disabled={busy} onClick={() => beginPaymentEdit(payment)}>{t("common.edit")}</button>
+                                    <button className="icon-button payment-periods__delete" type="button" disabled={busy} onClick={() => void removePayment(period, payment)} aria-label={t("studentForm.deletePayment", { amount: formatCurrency(payment.amount, i18n.resolvedLanguage, currency), date: formattedDate })}><Trash2 size={15} /></button>
+                                  </div>
+                                </>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : <p className="payment-periods__empty">{t("studentForm.noPaymentPeriods")}</p>}
+          </section>
+        )}
         {student && (
           <label className="switch-row"><span><strong>{t("studentForm.moveToArchive")}</strong><small>{t("studentForm.archiveDescription")}</small></span><input type="checkbox" checked={form.archived} onChange={(event) => setForm({ ...form, archived: event.target.checked })} /></label>
         )}
@@ -106,6 +262,7 @@ interface LessonEditorProps {
   lesson?: Lesson;
   presetDate?: Date;
   students: Student[];
+  periods: PaymentPeriod[];
   currency: Currency;
   busy: boolean;
   onClose: () => void;
@@ -142,8 +299,8 @@ function clampDuration(value: string | number): string {
   return String(Math.min(480, Math.max(15, normalized)));
 }
 
-export function LessonEditor({ lesson, presetDate, students, currency, busy, onClose, onSave, onDelete }: LessonEditorProps) {
-  const { t } = useTranslation();
+export function LessonEditor({ lesson, presetDate, students, periods, currency, busy, onClose, onSave, onDelete }: LessonEditorProps) {
+  const { t, i18n } = useTranslation();
   const initialDate = lesson ? new Date(lesson.startsAt) : roundTime(presetDate || new Date());
   const initialStudent = students.find((student) => student.id === lesson?.studentId)
     || students.find((student) => !student.archived);
@@ -154,13 +311,33 @@ export function LessonEditor({ lesson, presetDate, students, currency, busy, onC
     durationMinutes: String(lesson?.durationMinutes ?? 60),
     price: String(lesson?.price ?? initialStudent?.defaultLessonPrice ?? ""),
     status: (lesson?.status || "scheduled") as LessonStatus,
-    isPaid: lesson?.isPaid || false,
+    manualPaid: Boolean(lesson?.isPaid && !lesson.paymentPeriodId),
     notes: lesson?.notes || "",
   });
 
   const [selectedHour = "00", selectedMinute = "00"] = form.time.split(":");
   const minuteOptions = Array.from(new Set([...FIVE_MINUTE_OPTIONS, selectedMinute]))
     .sort((left, right) => Number(left) - Number(right));
+  const lessonStartsAt = new Date(`${form.date}T${form.time}`).getTime();
+  const coveringPeriod = form.status === "cancelled" || !Number.isFinite(lessonStartsAt) ? undefined : periods.find((period) => (
+    period.studentId === form.studentId
+    && lessonStartsAt >= new Date(period.startsAt).getTime()
+    && lessonStartsAt < new Date(period.endsAt).getTime()
+  ));
+  const linkedPeriod = lesson?.paymentPeriodId
+    ? periods.find((period) => period.id === lesson.paymentPeriodId)
+    : undefined;
+  const remainsInLinkedPeriod = Boolean(linkedPeriod)
+    && form.status !== "cancelled"
+    && form.studentId === linkedPeriod?.studentId
+    && Number.isFinite(lessonStartsAt)
+    && lessonStartsAt >= new Date(linkedPeriod!.startsAt).getTime()
+    && lessonStartsAt < new Date(linkedPeriod!.endsAt).getTime();
+  const automaticPayment = !form.manualPaid && remainsInLinkedPeriod ? linkedPeriod : undefined;
+  const coverageHint = !lesson && !form.manualPaid && coveringPeriod
+    ? t("lessonForm.coverageAfterSave")
+    : t("lessonForm.paidDescription");
+  const effectiveIsPaid = Boolean(automaticPayment) || form.manualPaid;
 
   const selectStudent = (id: string) => {
     const student = students.find((item) => item.id === id);
@@ -190,7 +367,7 @@ export function LessonEditor({ lesson, presetDate, students, currency, busy, onC
       durationMinutes: Number(form.durationMinutes),
       price: Number(form.price),
       status: form.status,
-      isPaid: form.isPaid,
+      isPaid: form.manualPaid,
       notes: form.notes || null,
     });
   };
@@ -242,7 +419,7 @@ export function LessonEditor({ lesson, presetDate, students, currency, busy, onC
           <label className="field lesson-price-field"><span><Banknote size={13} />{t("lessonForm.price")}</span><div className="input-addon"><input required type="number" min="0" max="1000000" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} /><span>{currencySymbol(currency)}</span></div></label>
         </div>
         <label className="field"><span>{t("lessonForm.status")}</span><select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as LessonStatus })}><option value="scheduled">{t("status.scheduled")}</option><option value="completed">{t("status.completed")}</option><option value="cancelled">{t("status.cancelled")}</option></select></label>
-        <label className="switch-row switch-row--paid"><span><strong>{t("lessonForm.paid")}</strong><small>{t("lessonForm.paidDescription")}</small></span><input type="checkbox" checked={form.isPaid} onChange={(event) => setForm({ ...form, isPaid: event.target.checked })} /></label>
+        <label className={`switch-row switch-row--paid${automaticPayment ? " switch-row--automatic" : ""}`}><span><strong>{t("lessonForm.paid")}</strong><small>{automaticPayment ? t("lessonForm.automaticPayment", { month: formatPaymentMonth(automaticPayment.month, i18n.resolvedLanguage) }) : coverageHint}</small></span><input type="checkbox" checked={effectiveIsPaid} disabled={busy || Boolean(automaticPayment)} onChange={(event) => setForm({ ...form, manualPaid: event.target.checked })} /></label>
         <label className="field"><span>{t("lessonForm.notes")}</span><textarea rows={3} maxLength={2000} value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder={t("lessonForm.notesPlaceholder")} /></label>
         <footer className="modal__actions">
           {lesson && <button className="button button--danger button--small" disabled={busy} type="button" onClick={remove}><Trash2 size={15} />{t("common.delete")}</button>}

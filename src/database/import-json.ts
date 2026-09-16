@@ -57,6 +57,7 @@ interface ImportCounts {
 }
 
 const IMPORT_LOCK_ID = 7_421_983_402;
+const FORCE_PAYMENT_PERIODS_ERROR = "Cannot force import while payment periods exist";
 const dataDirectory = path.resolve(__dirname, "../../data");
 
 function invalidImportData(): never {
@@ -254,9 +255,17 @@ async function isDatabaseEmpty(client: PoolClient): Promise<boolean> {
     SELECT
       NOT EXISTS (SELECT 1 FROM users)
       AND NOT EXISTS (SELECT 1 FROM students)
-      AND NOT EXISTS (SELECT 1 FROM lessons) AS is_empty
+      AND NOT EXISTS (SELECT 1 FROM lessons)
+      AND NOT EXISTS (SELECT 1 FROM payment_periods) AS is_empty
   `);
   return result.rows[0].is_empty;
+}
+
+async function ensureNoPaymentPeriodsForForce(client: PoolClient): Promise<void> {
+  const result = await client.query<{ exists: boolean }>(
+    "SELECT EXISTS (SELECT 1 FROM payment_periods) AS exists"
+  );
+  if (result.rows[0].exists) throw new Error(FORCE_PAYMENT_PERIODS_ERROR);
 }
 
 async function ensureNoForceEmailConflicts(
@@ -341,8 +350,8 @@ async function importLessons(client: PoolClient, lessons: ImportedLesson[]): Pro
     await client.query(
       `INSERT INTO lessons
         (id, owner_id, student_id, starts_at, duration_minutes, price, status,
-         is_paid, paid_at, notes, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         is_paid, paid_at, payment_period_id, notes, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NULL, $10, $11, $12)
        ON CONFLICT (id) DO UPDATE SET
          owner_id = EXCLUDED.owner_id,
          student_id = EXCLUDED.student_id,
@@ -397,11 +406,14 @@ export async function importJson(force = false): Promise<ImportCounts> {
   try {
     await client.query("BEGIN");
     await client.query("SELECT pg_advisory_xact_lock($1)", [IMPORT_LOCK_ID]);
-    await client.query("LOCK TABLE users, students, lessons IN ACCESS EXCLUSIVE MODE");
+    await client.query("LOCK TABLE users, students, payment_periods, lessons IN ACCESS EXCLUSIVE MODE");
     if (!force && !(await isDatabaseEmpty(client))) {
       throw new Error("Database is not empty; use --force to upsert");
     }
-    if (force) await ensureNoForceEmailConflicts(client, users);
+    if (force) {
+      await ensureNoPaymentPeriodsForForce(client);
+      await ensureNoForceEmailConflicts(client, users);
+    }
     await importUsers(client, users);
     await importStudents(client, students);
     await importLessons(client, lessons);
@@ -419,8 +431,10 @@ export async function importJson(force = false): Promise<ImportCounts> {
 if (require.main === module) {
   importJson(process.argv.includes("--force"))
     .then((counts) => console.log(JSON.stringify(counts)))
-    .catch(() => {
-      console.error("JSON import failed");
+    .catch((error: unknown) => {
+      console.error(error instanceof Error && error.message === FORCE_PAYMENT_PERIODS_ERROR
+        ? FORCE_PAYMENT_PERIODS_ERROR
+        : "JSON import failed");
       process.exitCode = 1;
     })
     .finally(closeDatabase);

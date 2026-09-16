@@ -16,7 +16,8 @@ export function formatCurrency(value: number, language: string | undefined, _cur
   return new Intl.NumberFormat(locale(language), {
     style: "currency",
     currency: "UAH",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(value);
 }
 

@@ -10,24 +10,35 @@ import {
   statusInfo,
   studentName,
 } from "../lib/format";
-import type { Currency, Lesson, Student, View } from "../types";
+import type { Currency, Lesson, PaymentPeriod, Student, View } from "../types";
 
 interface DashboardProps {
   students: Student[];
   lessons: Lesson[];
+  paymentPeriods: PaymentPeriod[];
   currency: Currency;
   onOpenLesson: (lesson: Lesson) => void;
   onAddLesson: () => void;
   onViewChange: (view: View) => void;
 }
 
-export function Dashboard({ students, lessons, currency, onOpenLesson, onAddLesson, onViewChange }: DashboardProps) {
+export function Dashboard({ students, lessons, paymentPeriods, currency, onOpenLesson, onAddLesson, onViewChange }: DashboardProps) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage;
   const monthLessons = lessons.filter((lesson) => isInMonth(lesson.startsAt) && lesson.status !== "cancelled");
-  const paidThisMonth = lessons.filter((lesson) => lesson.isPaid && lesson.paidAt && isInMonth(lesson.paidAt));
+  const manualPaymentsThisMonth = lessons.filter((lesson) => (
+    lesson.isPaid
+    && !lesson.paymentPeriodId
+    && lesson.paidAt
+    && isInMonth(lesson.paidAt)
+  ));
+  const installmentPaymentsThisMonth = paymentPeriods
+    .flatMap((period) => period.payments)
+    .filter((payment) => isInMonth(payment.paidAt));
+  const receivedPaymentCount = manualPaymentsThisMonth.length + installmentPaymentsThisMonth.length;
   const unpaid = lessons.filter((lesson) => lesson.status === "completed" && !lesson.isPaid);
-  const income = paidThisMonth.reduce((sum, lesson) => sum + lesson.price, 0);
+  const income = manualPaymentsThisMonth.reduce((sum, lesson) => sum + lesson.price, 0)
+    + installmentPaymentsThisMonth.reduce((sum, payment) => sum + payment.amount, 0);
   const debtTotal = unpaid.reduce((sum, lesson) => sum + lesson.price, 0);
   const now = Date.now();
   const upcoming = lessons
@@ -49,7 +60,7 @@ export function Dashboard({ students, lessons, currency, onOpenLesson, onAddLess
     {
       label: t("dashboard.monthlyIncome"),
       value: formatCurrency(income, language, currency),
-      meta: t("dashboard.paidLessons", { count: paidThisMonth.length }),
+      meta: t("dashboard.receivedPayments", { count: receivedPaymentCount }),
       icon: CircleDollarSign,
       tone: "violet",
       featured: true,
