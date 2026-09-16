@@ -4,6 +4,8 @@ import { pool, QueryExecutor, withTransaction } from "../../database";
 import { reconcilePaymentPeriod } from "../payment-period/reconcile-payment-period";
 import {
   CreateLessonDto,
+  CreateLessonSeriesLessonDto,
+  CreateLessonSeriesResult,
   Lesson,
   LessonFilters,
   LessonStatus,
@@ -184,6 +186,113 @@ export const lessonRepository = {
     excludeId?: string
   ): Promise<boolean> {
     return hasConflict(pool, ownerId, startsAt, durationMinutes, excludeId);
+  },
+
+  async createMany(
+    ownerId: string,
+    lesson: CreateLessonSeriesLessonDto,
+    occurrenceStartsAt: Date[]
+  ): Promise<CreateLessonSeriesResult> {
+    if (!isPositivePostgresBigintId(ownerId)) throw new Error("Invalid owner ID");
+    if (!isPositivePostgresBigintId(lesson.studentId)) {
+      return { lessons: [], studentActive: false, conflict: false };
+    }
+
+    return withTransaction(async (client) => {
+      await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [ownerId]);
+      const student = await client.query<{ id: string }>(
+        `SELECT id
+         FROM students
+         WHERE owner_id = $1 AND id = $2 AND NOT archived
+         FOR UPDATE`,
+        [ownerId, lesson.studentId]
+      );
+      if (!student.rows[0]) {
+        return { lessons: [], studentActive: false, conflict: false };
+      }
+
+      const conflict = await client.query<{ exists: boolean }>(
+        `WITH candidates AS (
+           SELECT candidate.starts_at,
+                  candidate.starts_at + ($2::integer * interval '1 minute') AS ends_at,
+                  candidate.ordinality
+           FROM unnest($3::timestamptz[]) WITH ORDINALITY
+             AS candidate(starts_at, ordinality)
+         )
+         SELECT EXISTS (
+           SELECT 1
+           FROM candidates AS candidate
+           JOIN lessons AS existing
+             ON existing.owner_id = $1
+            AND existing.status <> 'cancelled'
+            AND existing.starts_at < candidate.ends_at
+            AND existing.starts_at + (existing.duration_minutes * interval '1 minute')
+                > candidate.starts_at
+           UNION ALL
+           SELECT 1
+           FROM candidates AS earlier
+           JOIN candidates AS later
+             ON earlier.ordinality < later.ordinality
+            AND earlier.starts_at < later.ends_at
+            AND earlier.ends_at > later.starts_at
+         ) AS exists`,
+        [ownerId, lesson.durationMinutes, occurrenceStartsAt]
+      );
+      if (conflict.rows[0].exists) {
+        return { lessons: [], studentActive: true, conflict: true };
+      }
+
+      const inserted = await client.query<{ id: string }>(
+        `INSERT INTO lessons
+          (owner_id, student_id, starts_at, duration_minutes, price, status,
+           is_paid, paid_at, payment_period_id, notes)
+         SELECT $1, $2, candidate.starts_at, $3, $4, 'scheduled',
+                false, NULL, NULL, $5
+         FROM unnest($6::timestamptz[]) WITH ORDINALITY
+           AS candidate(starts_at, ordinality)
+         ORDER BY candidate.ordinality
+         RETURNING id`,
+        [
+          ownerId,
+          lesson.studentId,
+          lesson.durationMinutes,
+          lesson.price,
+          lesson.notes,
+          occurrenceStartsAt,
+        ]
+      );
+      const lessonIds = inserted.rows.map((row) => row.id);
+
+      const periods = await client.query<{ id: string }>(
+        `SELECT DISTINCT period.id
+         FROM payment_periods AS period
+         JOIN lessons AS inserted_lesson
+           ON inserted_lesson.owner_id = period.owner_id
+          AND inserted_lesson.student_id = period.student_id
+          AND inserted_lesson.starts_at >= period.starts_at
+          AND inserted_lesson.starts_at < period.ends_at
+         WHERE period.owner_id = $1
+           AND inserted_lesson.id = ANY($2::bigint[])
+         ORDER BY period.id`,
+        [ownerId, lessonIds]
+      );
+      for (const period of periods.rows) {
+        await reconcilePaymentPeriod(client, ownerId, period.id);
+      }
+
+      const lessons = await client.query<LessonRow>(
+        `SELECT ${LESSON_COLUMNS}
+         FROM lessons
+         WHERE owner_id = $1 AND id = ANY($2::bigint[])
+         ORDER BY starts_at ASC, id ASC`,
+        [ownerId, lessonIds]
+      );
+      return {
+        lessons: lessons.rows.map(mapLesson),
+        studentActive: true,
+        conflict: false,
+      };
+    });
   },
 
   async create(ownerId: string, dto: CreateLessonDto): Promise<Lesson | undefined> {

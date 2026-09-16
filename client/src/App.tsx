@@ -12,7 +12,7 @@ import { Calendar } from "./pages/Calendar";
 import { Dashboard } from "./pages/Dashboard";
 import { Students } from "./pages/Students";
 import { Profile } from "./pages/Profile";
-import type { AuthUser, Lesson, LessonPayload, PaymentEntryPayload, PaymentPeriod, PaymentPeriodPayload, Student, StudentPayload, Theme, View } from "./types";
+import type { AuthUser, Lesson, LessonPayload, LessonSeriesPayload, PaymentEntryPayload, PaymentPeriod, PaymentPeriodPayload, Student, StudentPayload, Theme, View } from "./types";
 
 type StudentModal = { student?: Student } | null;
 type LessonModal = { lesson?: Lesson; presetDate?: Date } | null;
@@ -292,6 +292,20 @@ export function App() {
     }
   };
 
+  const saveLessonSeries = async (payload: LessonSeriesPayload) => {
+    setBusy(true);
+    try {
+      const created = await api.lessons.createSeries(payload);
+      setLessonModal(null);
+      notify(t("toast.lessonSeriesScheduled", { count: created.length }));
+      await loadWorkspace();
+    } catch (error) {
+      handleMutationError(error, "errors.saveLessonSeriesFailed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const deleteLesson = async () => {
     if (!lessonModal?.lesson) return;
     setBusy(true);
@@ -371,11 +385,13 @@ export function App() {
           lesson={lessonModal.lesson}
           presetDate={lessonModal.presetDate}
           students={students}
+          lessons={lessons}
           periods={paymentPeriods}
           currency={currency}
           busy={busy}
           onClose={() => !busy && setLessonModal(null)}
           onSave={saveLesson}
+          onSaveSeries={saveLessonSeries}
           onDelete={deleteLesson}
         />
       )}

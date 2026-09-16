@@ -26,6 +26,16 @@ export const lessonController = {
     }
   },
 
+  async createSeries(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      res.status(201).json(
+        await lessonService.createSeries(req.authUserId as string, req.body)
+      );
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       res.json(

@@ -2,7 +2,7 @@ import { Banknote, CalendarDays, Clock3, Minus, Plus, Trash2, UserRound, WalletC
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { currencySymbol, dateKey, formatCurrency, studentName } from "../lib/format";
-import type { Currency, Lesson, LessonPayload, LessonStatus, PaymentEntry, PaymentEntryPayload, PaymentPeriod, PaymentPeriodPayload, Student, StudentPayload } from "../types";
+import type { Currency, Lesson, LessonPayload, LessonSeriesPayload, LessonStatus, PaymentEntry, PaymentEntryPayload, PaymentPeriod, PaymentPeriodPayload, Student, StudentPayload } from "../types";
 
 interface ModalProps {
   title: string;
@@ -262,11 +262,13 @@ interface LessonEditorProps {
   lesson?: Lesson;
   presetDate?: Date;
   students: Student[];
+  lessons: Lesson[];
   periods: PaymentPeriod[];
   currency: Currency;
   busy: boolean;
   onClose: () => void;
   onSave: (payload: LessonPayload) => Promise<void>;
+  onSaveSeries: (payload: LessonSeriesPayload) => Promise<void>;
   onDelete: () => Promise<void>;
 }
 
@@ -274,6 +276,100 @@ const HOURS = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, "
 const FIVE_MINUTE_OPTIONS = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, "0"));
 const QUICK_TIMES = ["09:00", "12:00", "15:00", "18:00"];
 const DURATION_PRESETS = [30, 45, 60, 90, 120];
+const WEEKDAYS = [
+  { value: 1, key: "mon" },
+  { value: 2, key: "tue" },
+  { value: 3, key: "wed" },
+  { value: 4, key: "thu" },
+  { value: 5, key: "fri" },
+  { value: 6, key: "sat" },
+  { value: 7, key: "sun" },
+] as const;
+const SERIES_PREVIEW_LIMIT = 6;
+
+interface GeneratedOccurrence {
+  date: Date;
+  iso: string;
+}
+
+interface RecurrenceGeneration {
+  occurrences: GeneratedOccurrence[];
+  invalidWallTime: boolean;
+  tooMany: boolean;
+}
+
+function isoWeekday(value: Date): number {
+  return value.getDay() || 7;
+}
+
+function parseCalendarDate(value: string): Date | null {
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(`${value}T12:00`);
+  return /^\d{4}-\d{2}-\d{2}$/.test(value)
+    && parsed.getFullYear() === year
+    && parsed.getMonth() === month - 1
+    && parsed.getDate() === day
+    ? parsed
+    : null;
+}
+
+function generateRecurrence(
+  startDate: string,
+  localTimeValue: string,
+  weekdays: number[],
+  intervalWeeksValue: number,
+  endMode: "date" | "count",
+  endDate: string,
+  occurrenceCount: number,
+): RecurrenceGeneration {
+  const start = parseCalendarDate(startDate);
+  const end = endMode === "date" ? parseCalendarDate(endDate) : null;
+  if (!start || weekdays.length === 0 || ![1, 2].includes(intervalWeeksValue)
+    || (endMode === "date" && (!end || endDate < startDate))
+    || (endMode === "count" && (!Number.isInteger(occurrenceCount) || occurrenceCount < 1 || occurrenceCount > 100))) {
+    return { occurrences: [], invalidWallTime: false, tooMany: false };
+  }
+
+  const monday = new Date(start);
+  monday.setDate(monday.getDate() - (isoWeekday(start) - 1));
+  const sortedWeekdays = [...weekdays].sort((left, right) => left - right);
+  const occurrences: GeneratedOccurrence[] = [];
+  let invalidWallTime = false;
+
+  for (let weekIndex = 0; ; weekIndex += 1) {
+    const weekMonday = new Date(monday);
+    weekMonday.setDate(monday.getDate() + weekIndex * intervalWeeksValue * 7);
+    if (endMode === "date" && dateKey(weekMonday) > endDate) break;
+
+    for (const weekday of sortedWeekdays) {
+      const calendarDate = new Date(weekMonday);
+      calendarDate.setDate(weekMonday.getDate() + weekday - 1);
+      const candidateDate = dateKey(calendarDate);
+      if (candidateDate < startDate || (endMode === "date" && candidateDate > endDate)) continue;
+
+      const [year, month, day] = candidateDate.split("-").map(Number);
+      const [hour, minute] = localTimeValue.split(":").map(Number);
+      const startsAt = new Date(`${candidateDate}T${localTimeValue}`);
+      if (startsAt.getFullYear() !== year
+        || startsAt.getMonth() !== month - 1
+        || startsAt.getDate() !== day
+        || startsAt.getHours() !== hour
+        || startsAt.getMinutes() !== minute) {
+        invalidWallTime = true;
+      }
+      occurrences.push({ date: startsAt, iso: startsAt.toISOString() });
+
+      if (endMode === "date" && occurrences.length > 100) {
+        return { occurrences, invalidWallTime, tooMany: true };
+      }
+      if (endMode === "count" && occurrences.length === occurrenceCount) {
+        return { occurrences, invalidWallTime, tooMany: false };
+      }
+    }
+  }
+
+  return { occurrences, invalidWallTime, tooMany: false };
+}
 
 function roundTime(value: Date): Date {
   const date = new Date(value);
@@ -299,7 +395,7 @@ function clampDuration(value: string | number): string {
   return String(Math.min(480, Math.max(15, normalized)));
 }
 
-export function LessonEditor({ lesson, presetDate, students, periods, currency, busy, onClose, onSave, onDelete }: LessonEditorProps) {
+export function LessonEditor({ lesson, presetDate, students, lessons, periods, currency, busy, onClose, onSave, onSaveSeries, onDelete }: LessonEditorProps) {
   const { t, i18n } = useTranslation();
   const initialDate = lesson ? new Date(lesson.startsAt) : roundTime(presetDate || new Date());
   const initialStudent = students.find((student) => student.id === lesson?.studentId)
@@ -314,11 +410,70 @@ export function LessonEditor({ lesson, presetDate, students, periods, currency, 
     manualPaid: Boolean(lesson?.isPaid && !lesson.paymentPeriodId),
     notes: lesson?.notes || "",
   });
+  const [recurring, setRecurring] = useState(false);
+  const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([isoWeekday(initialDate)]);
+  const [intervalWeeks, setIntervalWeeks] = useState<"1" | "2">("1");
+  const [endMode, setEndMode] = useState<"date" | "count">("count");
+  const [seriesEndDate, setSeriesEndDate] = useState(dateKey(initialDate));
+  const [seriesCount, setSeriesCount] = useState("4");
 
+  const seriesMode = !lesson && recurring;
   const [selectedHour = "00", selectedMinute = "00"] = form.time.split(":");
   const minuteOptions = Array.from(new Set([...FIVE_MINUTE_OPTIONS, selectedMinute]))
     .sort((left, right) => Number(left) - Number(right));
-  const lessonStartsAt = new Date(`${form.date}T${form.time}`).getTime();
+  const baseStart = new Date(`${form.date}T${form.time}`);
+  const lessonStartsAt = baseStart.getTime();
+  const parsedDuration = Number(form.durationMinutes);
+  const parsedInterval = Number(intervalWeeks);
+  const parsedCount = Number(seriesCount);
+  const parsedPrice = Number(form.price);
+  const baseWallTimeValid = baseStart.getFullYear() === Number(form.date.slice(0, 4))
+    && baseStart.getMonth() === Number(form.date.slice(5, 7)) - 1
+    && baseStart.getDate() === Number(form.date.slice(8, 10))
+    && baseStart.getHours() === Number(selectedHour)
+    && baseStart.getMinutes() === Number(selectedMinute);
+  const priceValid = form.price.trim() !== ""
+    && Number.isFinite(parsedPrice)
+    && parsedPrice >= 0
+    && parsedPrice <= 1_000_000;
+  const commonValid = Boolean(form.studentId) && Number.isFinite(lessonStartsAt) && baseWallTimeValid
+    && Number.isInteger(parsedDuration) && parsedDuration >= 15 && parsedDuration <= 480
+    && (form.price.trim() === "" || priceValid);
+  const endDateValid = endMode === "count"
+    || (Boolean(parseCalendarDate(seriesEndDate)) && seriesEndDate >= form.date);
+  const recurrenceValid = selectedWeekdays.length > 0
+    && (parsedInterval === 1 || parsedInterval === 2)
+    && endDateValid
+    && (endMode === "date" || (Number.isInteger(parsedCount) && parsedCount >= 1 && parsedCount <= 100));
+  const recurrence = seriesMode
+    ? generateRecurrence(form.date, form.time, selectedWeekdays, parsedInterval, endMode, seriesEndDate, parsedCount)
+    : { occurrences: [], invalidWallTime: false, tooMany: false };
+  const generatedStarts = recurrence.occurrences;
+  const conflictingStarts = generatedStarts.filter((candidate) => {
+    const candidateStart = candidate.date.getTime();
+    const candidateEnd = candidateStart + parsedDuration * 60_000;
+    return Number.isFinite(candidateEnd) && lessons.some((existing) => {
+      if (existing.status === "cancelled") return false;
+      const existingStart = new Date(existing.startsAt).getTime();
+      const existingEnd = existingStart + existing.durationMinutes * 60_000;
+      return candidateStart < existingEnd && candidateEnd > existingStart;
+    });
+  });
+  const seriesInvalid = seriesMode && (!commonValid || !priceValid || !recurrenceValid
+    || recurrence.invalidWallTime || recurrence.tooMany || generatedStarts.length === 0
+    || (endMode === "count" && generatedStarts.length !== parsedCount));
+  const seriesConflict = seriesMode && conflictingStarts.length > 0;
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const previewFormatter = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: "medium", timeStyle: "short" });
+  const previewStarts = generatedStarts.slice(0, SERIES_PREVIEW_LIMIT);
+  const previewRemaining = Math.max(generatedStarts.length - previewStarts.length, 0);
+
+  const toggleWeekday = (weekday: number) => {
+    setSelectedWeekdays((current) => current.includes(weekday)
+      ? current.filter((value) => value !== weekday)
+      : [...current, weekday].sort((left, right) => left - right));
+  };
+
   const coveringPeriod = form.status === "cancelled" || !Number.isFinite(lessonStartsAt) ? undefined : periods.find((period) => (
     period.studentId === form.studentId
     && lessonStartsAt >= new Date(period.startsAt).getTime()
@@ -361,11 +516,45 @@ export function LessonEditor({ lesson, presetDate, students, periods, currency, 
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (seriesMode) {
+      if (seriesInvalid || seriesConflict) return;
+      await onSaveSeries({
+        lesson: {
+          studentId: form.studentId,
+          durationMinutes: parsedDuration,
+          price: parsedPrice,
+          status: "scheduled",
+          isPaid: false,
+          notes: form.notes || null,
+        },
+        recurrence: endMode === "date"
+          ? {
+            startDate: form.date,
+            localTime: form.time,
+            timeZone,
+            weekdays: [...selectedWeekdays].sort((left, right) => left - right),
+            intervalWeeks: parsedInterval as 1 | 2,
+            endMode: "date",
+            endDate: seriesEndDate,
+          }
+          : {
+            startDate: form.date,
+            localTime: form.time,
+            timeZone,
+            weekdays: [...selectedWeekdays].sort((left, right) => left - right),
+            intervalWeeks: parsedInterval as 1 | 2,
+            endMode: "count",
+            occurrenceCount: parsedCount,
+          },
+        occurrenceStartsAt: generatedStarts.map((start) => start.iso),
+      });
+      return;
+    }
     await onSave({
       studentId: form.studentId,
-      startsAt: new Date(`${form.date}T${form.time}`).toISOString(),
-      durationMinutes: Number(form.durationMinutes),
-      price: Number(form.price),
+      startsAt: baseStart.toISOString(),
+      durationMinutes: parsedDuration,
+      price: parsedPrice,
       status: form.status,
       isPaid: form.manualPaid,
       notes: form.notes || null,
@@ -383,7 +572,7 @@ export function LessonEditor({ lesson, presetDate, students, periods, currency, 
         <label className="field"><span>{t("lessonForm.student")}</span><select required value={form.studentId} onChange={(event) => selectStudent(event.target.value)}><option value="">{t("lessonForm.selectStudent")}</option>{students.filter((student) => !student.archived || student.id === lesson?.studentId).map((student) => <option key={student.id} value={student.id}>{studentName(student)}{student.archived ? t("lessonForm.archivedSuffix") : ""}</option>)}</select></label>
         <div className="form-section-title"><CalendarDays size={17} /><span>{t("lessonForm.dateTime")}</span></div>
         <div className="lesson-date-time">
-          <label className="field lesson-date-field"><span>{t("lessonForm.date")}</span><input required type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} /></label>
+          <label className="field lesson-date-field"><span>{t(seriesMode ? "lessonForm.startDate" : "lessonForm.date")}</span><input required type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} /></label>
           <div className="field lesson-time-field">
             <span><Clock3 size={13} />{t("lessonForm.time")}</span>
             <div className="time-picker" role="group" aria-label={t("lessonForm.time")}>
@@ -401,6 +590,58 @@ export function LessonEditor({ lesson, presetDate, students, periods, currency, 
             </div>
           </div>
         </div>
+        {!lesson && (
+          <div className="recurrence-card">
+            <label className="switch-row"><span><strong>{t("lessonForm.regularLesson")}</strong><small>{t("lessonForm.regularLessonDescription")}</small></span><input type="checkbox" checked={recurring} disabled={busy} onChange={(event) => setRecurring(event.target.checked)} /></label>
+            {seriesMode && (
+              <>
+                <fieldset className="weekday-selector">
+                  <legend>{t("lessonForm.weekdays")}</legend>
+                  <div role="group" aria-label={t("lessonForm.weekdays")}>
+                    {WEEKDAYS.map((weekday) => (
+                      <button
+                        className={selectedWeekdays.includes(weekday.value) ? "weekday-chip weekday-chip--active" : "weekday-chip"}
+                        type="button"
+                        aria-pressed={selectedWeekdays.includes(weekday.value)}
+                        key={weekday.value}
+                        onClick={() => toggleWeekday(weekday.value)}
+                      >
+                        {t(`calendar.weekdays.${weekday.key}`)}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+                <div className="recurrence-controls">
+                  <label className="field"><span>{t("lessonForm.interval")}</span><select required value={intervalWeeks} onChange={(event) => setIntervalWeeks(event.target.value as "1" | "2")}><option value="1">{t("lessonForm.everyWeek")}</option><option value="2">{t("lessonForm.everyTwoWeeks")}</option></select></label>
+                  <label className="field"><span>{t("lessonForm.endMode")}</span><select required value={endMode} onChange={(event) => setEndMode(event.target.value as "date" | "count")}><option value="date">{t("lessonForm.endOnDate")}</option><option value="count">{t("lessonForm.endAfterCount")}</option></select></label>
+                </div>
+                {endMode === "date" ? (
+                  <label className="field recurrence-end-field"><span>{t("lessonForm.endDate")}</span><input required type="date" min={form.date} value={seriesEndDate} onChange={(event) => setSeriesEndDate(event.target.value)} /><small>{t("lessonForm.endDateInclusive")}</small></label>
+                ) : (
+                  <label className="field recurrence-end-field"><span>{t("lessonForm.occurrenceCount")}</span><input required type="number" min="1" max="100" step="1" value={seriesCount} onChange={(event) => setSeriesCount(event.target.value)} /></label>
+                )}
+                <p className="recurrence-meta">{t("lessonForm.seriesModeHint", { timeZone })}</p>
+                {selectedWeekdays.length === 0 && <p className="recurrence-error" role="alert">{t("lessonForm.weekdaysRequired")}</p>}
+                {recurrence.tooMany && <p className="recurrence-error" role="alert">{t("lessonForm.seriesTooMany")}</p>}
+                {recurrence.invalidWallTime && <p className="recurrence-error" role="alert">{t("lessonForm.invalidLocalTime")}</p>}
+                {seriesInvalid && selectedWeekdays.length > 0 && !recurrence.tooMany && !recurrence.invalidWallTime && <p className="recurrence-error" role="alert">{t("errors.invalidLessonSeries")}</p>}
+                {!seriesInvalid && seriesConflict && (
+                  <div className="recurrence-warning" role="alert">
+                    <strong>{t("lessonForm.seriesConflict", { count: conflictingStarts.length })}</strong>
+                    <ul>{conflictingStarts.map((start) => <li key={start.iso}>{previewFormatter.format(start.date)}</li>)}</ul>
+                  </div>
+                )}
+                {!seriesInvalid && generatedStarts.length > 0 && (
+                  <div className="recurrence-preview-block">
+                    <div className="form-section-title"><CalendarDays size={15} /><span>{t("lessonForm.seriesPreview", { count: generatedStarts.length })}</span></div>
+                    <ol className="recurrence-preview">{previewStarts.map((start) => <li key={start.iso}>{previewFormatter.format(start.date)}</li>)}</ol>
+                    <p className="recurrence-preview__meta">{previewRemaining > 0 ? t("lessonForm.previewRemaining", { count: previewRemaining }) : t("lessonForm.previewComplete")} · {t("lessonForm.previewTimeZone", { timeZone })}</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
         <div className="lesson-details-grid">
           <div className="field duration-field">
             <span><Clock3 size={13} />{t("lessonForm.duration")}</span>
@@ -418,14 +659,18 @@ export function LessonEditor({ lesson, presetDate, students, periods, currency, 
           </div>
           <label className="field lesson-price-field"><span><Banknote size={13} />{t("lessonForm.price")}</span><div className="input-addon"><input required type="number" min="0" max="1000000" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} /><span>{currencySymbol(currency)}</span></div></label>
         </div>
-        <label className="field"><span>{t("lessonForm.status")}</span><select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as LessonStatus })}><option value="scheduled">{t("status.scheduled")}</option><option value="completed">{t("status.completed")}</option><option value="cancelled">{t("status.cancelled")}</option></select></label>
-        <label className={`switch-row switch-row--paid${automaticPayment ? " switch-row--automatic" : ""}`}><span><strong>{t("lessonForm.paid")}</strong><small>{automaticPayment ? t("lessonForm.automaticPayment", { month: formatPaymentMonth(automaticPayment.month, i18n.resolvedLanguage) }) : coverageHint}</small></span><input type="checkbox" checked={effectiveIsPaid} disabled={busy || Boolean(automaticPayment)} onChange={(event) => setForm({ ...form, manualPaid: event.target.checked })} /></label>
+        {!seriesMode && (
+          <>
+            <label className="field"><span>{t("lessonForm.status")}</span><select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as LessonStatus })}><option value="scheduled">{t("status.scheduled")}</option><option value="completed">{t("status.completed")}</option><option value="cancelled">{t("status.cancelled")}</option></select></label>
+            <label className={`switch-row switch-row--paid${automaticPayment ? " switch-row--automatic" : ""}`}><span><strong>{t("lessonForm.paid")}</strong><small>{automaticPayment ? t("lessonForm.automaticPayment", { month: formatPaymentMonth(automaticPayment.month, i18n.resolvedLanguage) }) : coverageHint}</small></span><input type="checkbox" checked={effectiveIsPaid} disabled={busy || Boolean(automaticPayment)} onChange={(event) => setForm({ ...form, manualPaid: event.target.checked })} /></label>
+          </>
+        )}
         <label className="field"><span>{t("lessonForm.notes")}</span><textarea rows={3} maxLength={2000} value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder={t("lessonForm.notesPlaceholder")} /></label>
         <footer className="modal__actions">
           {lesson && <button className="button button--danger button--small" disabled={busy} type="button" onClick={remove}><Trash2 size={15} />{t("common.delete")}</button>}
           <span className="spacer" />
           <button className="button button--secondary" disabled={busy} type="button" onClick={onClose}>{t("common.cancel")}</button>
-          <button className="button button--primary" disabled={busy} type="submit">{t(busy ? "common.saving" : "common.save")}</button>
+          <button className="button button--primary" disabled={busy || seriesInvalid || seriesConflict} type="submit">{t(busy ? "common.saving" : seriesMode ? "lessonForm.createSeries" : "common.save")}</button>
         </footer>
       </form>
     </Modal>

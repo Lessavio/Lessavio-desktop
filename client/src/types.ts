@@ -88,6 +88,34 @@ export interface LessonPayload {
   notes: string | null;
 }
 
+export interface LessonSeriesLessonPayload {
+  studentId: string;
+  durationMinutes: number;
+  price: number;
+  status: "scheduled";
+  isPaid: false;
+  notes: string | null;
+}
+
+interface LessonSeriesRecurrenceBase {
+  startDate: string;
+  localTime: string;
+  timeZone: string;
+  weekdays: number[];
+  intervalWeeks: 1 | 2;
+}
+
+export type LessonSeriesRecurrencePayload = LessonSeriesRecurrenceBase & (
+  | { endMode: "date"; endDate: string; occurrenceCount?: never }
+  | { endMode: "count"; occurrenceCount: number; endDate?: never }
+);
+
+export interface LessonSeriesPayload {
+  lesson: LessonSeriesLessonPayload;
+  recurrence: LessonSeriesRecurrencePayload;
+  occurrenceStartsAt: string[];
+}
+
 export interface AuthUser {
   id: string;
   name: string;

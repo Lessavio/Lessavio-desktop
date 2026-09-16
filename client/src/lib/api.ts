@@ -2,6 +2,7 @@ import type {
   AuthUser,
   Lesson,
   LessonPayload,
+  LessonSeriesPayload,
   LoginPayload,
   PaymentEntryPayload,
   PaymentPeriod,
@@ -64,6 +65,8 @@ export const api = {
     list: () => request<Lesson[]>("/api/lessons"),
     create: (payload: LessonPayload) =>
       request<Lesson>("/api/lessons", { method: "POST", body: JSON.stringify(payload) }),
+    createSeries: (payload: LessonSeriesPayload) =>
+      request<Lesson[]>("/api/lessons/series", { method: "POST", body: JSON.stringify(payload) }),
     update: (id: string, payload: LessonPayload) =>
       request<Lesson>(`/api/lessons/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
     delete: (id: string) => request<void>(`/api/lessons/${id}`, { method: "DELETE" }),
