@@ -4,12 +4,12 @@
 
 ## Download and install
 
-[![Install for Windows](https://img.shields.io/badge/Install_for_Windows-Download_EXE-2563EB?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.1.0/Tutorly-Windows-Setup.exe)
-[![Install for macOS](https://img.shields.io/badge/Install_for_macOS-Download_DMG-2F6D56?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.1.0/Tutorly-macOS.dmg)
+[![Install for Windows](https://img.shields.io/badge/Install_for_Windows-Download_EXE-2563EB?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.2.0/Tutorly-Windows-Setup.exe)
+[![Install for macOS](https://img.shields.io/badge/Install_for_macOS-Download_DMG-2F6D56?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.2.0/Tutorly-macOS.dmg)
 
 **Windows:** download and run the installer. **Mac:** open the DMG and drag Tutorly into Applications. The macOS release download is intended for both Apple Silicon and Intel Macs.
 
-> **Version 0.1.0 is available:** the buttons download the published installers directly. The Mac installer supports Apple Silicon and Intel; the Windows installer is for x64 PCs. These are unsigned preview builds. See the [release notes](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.1.0).
+> **Version 0.2.0 is available:** the buttons download the published installers directly. The Mac installer supports Apple Silicon and Intel; the Windows installer is for x64 PCs. These are unsigned preview builds. See the [release notes](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.2.0).
 
 [Detailed macOS installation](#macos) · [Detailed Windows installation](#windows)
 
@@ -21,7 +21,7 @@ Tutorly helps you organize students, schedule lessons, and track payments on you
 
 Built with **Tauri 2, React, TypeScript, Rust, and SQLite** for macOS and Windows.
 
-> **Current version: 0.1.0 — early preview.** The published 0.1.0 installer has a Russian interface. The 0.2.0 source version adds Russian, Ukrainian, and English in Settings, with the preference saved in the local profile. Universal macOS and Windows x64 installers have been built successfully in GitHub Actions and published. Full native installation and interface testing on both platforms remains pending. Current installers are not signed with a publisher certificate.
+> **Current version: 0.2.0 — early preview.** Includes Russian, Ukrainian, and English, improved selectors, and recurring lessons with separate times for each weekday. Universal macOS and Windows x64 installers are provided through GitHub Releases. Full native installation and interface testing on both platforms remains pending. Current installers are not signed with a publisher certificate.
 
 ## Contents
 
@@ -63,7 +63,7 @@ Open the repository's **[Releases page](https://github.com/Valentin-Holovin/Tuto
 
 On a Mac, open **Apple menu → About This Mac** to check the processor.
 
-**Availability:** [version 0.1.0](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.1.0) includes published macOS and Windows installers. Future workflow runs create a draft release that the maintainer must publish. GitHub's “Source code” ZIP and TAR.GZ downloads are source files, not installers.
+**Availability:** [version 0.2.0](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.2.0) includes published macOS and Windows installers. Future workflow runs create a draft release that the maintainer must publish. GitHub's “Source code” ZIP and TAR.GZ downloads are source files, not installers.
 
 You do **not** need Git, Node.js, Rust, or PostgreSQL to use a ready-made installer.
 
@@ -106,13 +106,13 @@ Open **Recurring lessons** from Today, Calendar, or a student card. Select the w
 
 The preview shows the exact dates and any conflicts. Conflicting schedules are not saved. Lessons follow the profile's time zone and keep their local times across daylight saving changes. All occurrences are created together through the end date; the app does not automatically extend the series beyond that date. You can edit or cancel an individual lesson, or confirm cancellation of future scheduled lessons in its series.
 
-This feature requires the 0.2.0 source build or a newer installer; the published 0.1.0 installer does not include it.
+Recurring lessons are included in version 0.2.0. Install the current release to use them.
 
 ### Interface language (0.2.0)
 
 At first launch or in **Settings → Interface language**, choose **Русский**, **Українська**, or **English**. On an existing profile, changing the language applies and saves it immediately. Your preference is retained after reopening the desktop app and is included in backups. Existing profiles without a language preference continue in Russian.
 
-This feature is available in the 0.2.0 source build; the published 0.1.0 download remains Russian-only until a new release is published.
+Language selection is included in the version 0.2.0 installers.
 
 ### Currency and time zones
 
@@ -183,7 +183,7 @@ Avoid moving or copying the live SQLite files while Tutorly is open. Use the app
 4. Install it in the same way as the original version, replacing the existing app when prompted.
 5. Open Tutorly and check your workspace.
 
-Automatic updates are not implemented in version 0.1.0. Data is stored separately from the application bundle, but keeping an external backup before an update is recommended.
+Automatic updates are not implemented in version 0.2.0. Data is stored separately from the application bundle, but keeping an external backup before an update is recommended.
 
 ### Uninstall
 
@@ -286,6 +286,6 @@ For tests, architecture details, and release publishing, see the [developer guid
 
 ## Current limitations
 
-Version 0.1.0 does not include automatic synchronization, multiple in-app profiles, recurring lesson creation, automatic updates, payment editing, or an internal snapshot recovery screen. The 0.2.0 source version includes Russian, Ukrainian, and English interface translations. To correct a payment, remove the incorrect entry and record a new one.
+Version 0.2.0 does not include automatic synchronization, multiple in-app profiles, automatic updates, payment editing, or an internal snapshot recovery screen. Recurring lessons are generated through the end date you select; they do not extend automatically. To correct a payment, remove the incorrect entry and record a new one.
 
 This is a new desktop implementation. The older web application remains in `client/` and `src/`; it is not used by Tutorly Desktop, and its data is not imported.

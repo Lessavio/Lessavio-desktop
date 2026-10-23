@@ -10,7 +10,7 @@ Settings and first-run setup include **Русский**, **Українська*
 
 Translations cover navigation, screens, forms, notifications, validation errors, and app-provided file dialog titles. Dates, times, currency formatting, and month names use the selected locale. Operating-system dialog controls follow the OS language. Technical errors from SQLite or the operating system may retain their original wording.
 
-Version 0.2.0 must be built and installed to use translations; the published 0.1.0 installers are unchanged.
+Install version 0.2.0 to use translations. The published installers are available through the main README download buttons.
 
 ## Selection controls (0.2.0)
 
@@ -83,7 +83,7 @@ desktop/
 
 Rust opens `tutorly.sqlite` in Tauri's `app_data_dir` for `com.tutorly.desktop`. On macOS this is `~/Library/Application Support/com.tutorly.desktop/`; on Windows it is normally `%APPDATA%\com.tutorly.desktop\`.
 
-Version 0.1.0 stores the workspace as a single versioned JSON document in a SQLite `workspace` table, rather than separate relational tables for each entity. This keeps related changes in one transaction for a personal workspace. Any future schema change must account for the existing document format and database `user_version`.
+Version 0.2.0 stores the workspace as a single versioned JSON document in a SQLite `workspace` table, rather than separate relational tables for each entity. This keeps related changes in one transaction for a personal workspace. Any future schema change must account for the existing document format and database `user_version`.
 
 - SQLite uses WAL mode and `synchronous=FULL`.
 - The UI validates a workspace and waits for persistence to succeed before adopting the new state.
@@ -179,7 +179,7 @@ Before publishing a release, verify on real macOS and Windows installations:
 6. Installation of a newer build over an existing workspace.
 7. Reopening the existing window when launching another instance.
 
-The Apple Silicon macOS installer has been built locally. Native window interaction was not verified through automation because macOS computer-control permissions were unavailable. The universal macOS and Windows x64 builds have also completed successfully in GitHub Actions, and version 0.1.0 is published. Full native installation and interface testing still requires platform verification.
+The Apple Silicon macOS installer has been built locally. Native window interaction was not verified through automation because macOS computer-control permissions were unavailable. The universal macOS and Windows x64 builds have also completed successfully in GitHub Actions, and version 0.2.0 is published. Full native installation and interface testing still requires platform verification.
 
 ## GitHub Releases
 
@@ -192,14 +192,14 @@ The workflow at [`.github/workflows/desktop-release.yml`](../.github/workflows/d
 
 It uses the repository's `GITHUB_TOKEN` with `contents: write`. It does not upload user databases or backups.
 
-### Publish version 0.1.0
+### Publish a release (example: 0.2.0)
 
 1. Push the source and lock files to GitHub.
 2. Open **Actions → Desktop installers → Run workflow**, or push the matching version tag:
 
    ```sh
-   git tag desktop-v0.1.0
-   git push origin desktop-v0.1.0
+   git tag desktop-v0.2.0
+   git push origin desktop-v0.2.0
    ```
 
 3. Wait for both platform jobs to finish successfully.
@@ -225,7 +225,7 @@ The current workflow produces preview installers without publisher signing or Ap
 
 References: [macOS signing and notarization](https://v2.tauri.app/distribute/sign/macos/), [Windows installer packaging](https://v2.tauri.app/distribute/windows-installer/).
 
-There is no automatic updater in 0.1.0. Users manually install a newer version; the workspace database is stored separately from the application files. Preserve backward compatibility or provide migrations when changing persistence formats.
+There is no automatic updater in 0.2.0. Users manually install a newer version; the workspace database is stored separately from the application files. Preserve backward compatibility or provide migrations when changing persistence formats.
 
 ## Scope of the preview
 
