@@ -9,7 +9,7 @@
 
 **Windows:** download and run the installer. **Mac:** open the DMG and drag Tutorly into Applications. The macOS release download is intended for both Apple Silicon and Intel Macs.
 
-> **First release pending:** no GitHub release has been published yet. These download buttons will work once the maintainer builds and publishes `desktop-v0.1.0` with its installer files. Until then, use the [source installation instructions](#run-from-source). See [all releases](https://github.com/Valentin-Holovin/Tutorly/releases).
+> **Version 0.1.0 is available:** the buttons download the published installers directly. The Mac installer supports Apple Silicon and Intel; the Windows installer is for x64 PCs. These are unsigned preview builds. See the [release notes](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.1.0).
 
 [Detailed macOS installation](#macos) · [Detailed Windows installation](#windows)
 
@@ -21,7 +21,7 @@ Tutorly helps you organize students, schedule lessons, and track payments on you
 
 Built with **Tauri 2, React, TypeScript, Rust, and SQLite** for macOS and Windows.
 
-> **Current version: 0.1.0 — early preview.** The interface is currently in Russian. An English README does not change the application language. The macOS Apple Silicon installer has been built locally; Windows and universal macOS builds are configured in GitHub Actions and still require platform testing. Current installers are not signed with a publisher certificate.
+> **Current version: 0.1.0 — early preview.** The interface is currently in Russian. An English README does not change the application language. Universal macOS and Windows x64 installers have been built successfully in GitHub Actions and published. Full native installation and interface testing on both platforms remains pending. Current installers are not signed with a publisher certificate.
 
 ## Contents
 
@@ -63,7 +63,7 @@ Open the repository's **[Releases page](https://github.com/Valentin-Holovin/Tuto
 
 On a Mac, open **Apple menu → About This Mac** to check the processor.
 
-**Availability:** the repository includes a workflow that creates a *draft* release. An installer will only appear on the public Releases page after a maintainer publishes that release. If no installers are listed, use [Run from source](#run-from-source) or ask the maintainer for a build. GitHub's “Source code” ZIP and TAR.GZ downloads are source files, not installers.
+**Availability:** [version 0.1.0](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.1.0) includes published macOS and Windows installers. Future workflow runs create a draft release that the maintainer must publish. GitHub's “Source code” ZIP and TAR.GZ downloads are source files, not installers.
 
 You do **not** need Git, Node.js, Rust, or PostgreSQL to use a ready-made installer.
 

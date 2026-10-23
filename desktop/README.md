@@ -155,7 +155,7 @@ Before publishing a release, verify on real macOS and Windows installations:
 6. Installation of a newer build over an existing workspace.
 7. Reopening the existing window when launching another instance.
 
-The Apple Silicon macOS installer has been built locally. Native window interaction was not verified through automation because macOS computer-control permissions were unavailable. Windows and universal macOS installer behavior still require platform verification.
+The Apple Silicon macOS installer has been built locally. Native window interaction was not verified through automation because macOS computer-control permissions were unavailable. The universal macOS and Windows x64 builds have also completed successfully in GitHub Actions, and version 0.1.0 is published. Full native installation and interface testing still requires platform verification.
 
 ## GitHub Releases
 
