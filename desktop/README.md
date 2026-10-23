@@ -1,6 +1,6 @@
 # Lessavio Desktop — Developer Guide
 
-Lessavio Desktop is a local application for independent tutors built with Tauri 2, React, TypeScript, Rust, and SQLite. It has no hosted backend, online authentication, or cloud database.
+Lessavio Desktop is a local application for independent tutors built with Tauri 2, React, TypeScript, Rust, and SQLite. Teaching data stays local in SQLite. Source version 0.5.0 adds optional Firebase Authentication; no Lessavio server or cloud teaching database is required.
 
 For a product overview, installer instructions for macOS and Windows, first-run setup, and backup procedures, read the **[main README](../README.md)**.
 
@@ -66,6 +66,14 @@ The `desktop` package is independent of the older root/client npm workspace. Ins
 
 These features are included in the published Lessavio 0.4.0 installers linked at the top of the main README.
 
+## Optional Firebase accounts and SQLite schema 2 (0.5.0)
+
+See [Accounts and future synchronization](../docs/accounts-and-sync.md) for Firebase setup, emulator commands, account isolation, migration, revision tracking, and the future sync boundary. No teaching records are sent to Firebase. The published 0.4.0 installers do not yet include accounts.
+
+## Optional Firebase Analytics (0.5.0)
+
+See [Analytics](../docs/analytics.md) for opt-in behavior, the event allowlist, public configuration, GA4 reporting setup, CSP requirements, development isolation, and packaged-webview limitations.
+
 ## Architecture
 
 ```text
@@ -100,13 +108,15 @@ desktop/
 
 Rust opens `tutorly.sqlite` in Tauri's `app_data_dir` for `com.tutorly.desktop`. On macOS this is `~/Library/Application Support/com.tutorly.desktop/`; on Windows it is normally `%APPDATA%\com.tutorly.desktop\`.
 
-Version 0.2.0 stores the workspace as a single versioned JSON document in a SQLite `workspace` table, rather than separate relational tables for each entity. This keeps related changes in one transaction for a personal workspace. Any future schema change must account for the existing document format and database `user_version`.
+Versions through 0.4.0 store the workspace as a single versioned JSON document in a SQLite `workspace` table, rather than separate relational tables for each entity. This keeps related changes in one transaction for a personal workspace. Any future schema change must account for the existing document format and database `user_version`.
 
 - SQLite uses WAL mode and `synchronous=FULL`.
 - The UI validates a workspace and waits for persistence to succeed before adopting the new state.
 - The browser preview uses memory only and does not simulate durable desktop storage.
 - Frontend code does not receive general-purpose filesystem or SQL access.
 - A startup read failure shows an error instead of creating a blank profile over existing data.
+
+The 0.5.0 source uses `local_workspaces` and scoped tables instead; the singleton tables are retained as the legacy migration snapshot. See the account architecture document above.
 
 ### IPC commands
 
@@ -246,6 +256,6 @@ There is no automatic updater in 0.2.0. Users manually install a newer version; 
 
 ## Scope of the preview
 
-Not implemented: cloud sync, in-app profile switching, payment editing, automatic updates, snapshot recovery UI.
+Not implemented: cloud sync, payment editing, automatic updates, snapshot recovery UI.
 
 The older web application in the repository's `client/` and `src/` directories is separate. Its dependencies, database migration scripts, and root `dev` / `build` commands belong to that legacy application. Desktop development does not import its data.

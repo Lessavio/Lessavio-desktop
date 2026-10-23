@@ -163,3 +163,104 @@ test('series edits do not recreate completed or cancelled dates inside the range
  assert.equal(result.length,4);assert.equal(result.filter(l=>l.status==='scheduled').length,2);
  assert.equal(result.find(l=>l.id===initial[1].id)?.startsAt,initial[1].startsAt);
 });
+
+test('account scopes isolate projects, users and local guest data',async()=>{
+ const {accountScope}=await import('./authPolicy.ts');
+ assert.notEqual(accountScope('demo-lessavio','alice'),accountScope('demo-lessavio','bob'));
+ assert.notEqual(accountScope('project-a','alice'),accountScope('project-b','alice'));
+ assert.notEqual(accountScope('demo-lessavio','alice'),'guest');
+ assert.throws(()=>accountScope('project','../alice'));
+ assert.throws(()=>accountScope('','alice'));
+});
+test('auth errors are localized without exposing provider details',async()=>{
+ const {authErrorKey}=await import('./authPolicy.ts');
+ assert.equal(authErrorKey({code:'auth/wrong-password'}),authErrorKey({code:'auth/user-not-found'}));
+ assert.equal(authErrorKey({code:'auth/network-request-failed'}),'Для этого действия нужен интернет');
+ assert.equal(authErrorKey(new Error('secret server detail')),'Не удалось выполнить действие с аккаунтом. Попробуйте снова');
+ for(const code of ['auth/invalid-email','auth/weak-password','auth/too-many-requests','auth/operation-not-allowed'])assert.notEqual(translator('en')(authErrorKey({code})),authErrorKey({code}));
+});
+
+test('analytics consent defaults to off and events cannot carry arbitrary personal fields',async()=>{
+ const {ConsentAnalytics,hasAnalyticsConsent,analyticsConsentKey}=await import('./analyticsPolicy.ts');
+ assert.equal(hasAnalyticsConsent(null),false);assert.equal(hasAnalyticsConsent('true'),false);assert.equal(hasAnalyticsConsent('granted'),true);
+ assert.notEqual(analyticsConsentKey('guest'),analyticsConsentKey('firebase:project:alice'));
+ const events:{name:string;params:Record<string,string>}[]=[];let loads=0;
+ const context={platform:'desktop' as const,operating_system:'macos' as const,app_version:'0.5.0',ui_language:'en' as const,email:'private@example.test',notes:'Private note'};
+ const service=new ConsentAnalytics(context,async()=>{loads++;return {emit:(name,params)=>events.push({name,params})};},()=>{});
+ await service.activate('firebase:project:alice',false);service.track('firebase:project:alice','student_created');assert.equal(loads,0);assert.equal(events.length,0);
+ await service.activate('firebase:project:alice',true);service.track('firebase:project:alice','payment_recorded');service.track('guest','payment_recorded');
+ service.track('firebase:project:alice','private@example.test' as never);
+ assert.deepEqual(events.map(e=>e.name),['app_opened','payment_recorded']);
+ assert.equal(JSON.stringify(events).includes('private'),false);assert.equal(JSON.stringify(events).includes('alice'),false);
+ service.deactivate();service.track('firebase:project:alice','student_created');assert.equal(events.length,2);
+});
+test('revoking consent during initialization drops queued events and prevents late startup',async()=>{
+ const {ConsentAnalytics}=await import('./analyticsPolicy.ts');let ready!:(transport:import('./analyticsPolicy.ts').AnalyticsTransport)=>void;const names:string[]=[];
+ const service=new ConsentAnalytics({platform:'web',operating_system:'other',app_version:'0.5.0',ui_language:'en'},()=>new Promise(resolve=>{ready=resolve;}),()=>{});
+ const activation=service.activate('guest',true);service.track('guest','student_created');service.setScreen('guest','students');service.deactivate('guest');
+ ready({emit:name=>names.push(name)});await activation;assert.deepEqual(names,[]);assert.equal(service.getStatus(),'off');
+});
+test('switching workspaces discards the previous analytics queue and stale initialization',async()=>{
+ const {ConsentAnalytics}=await import('./analyticsPolicy.ts');type Transport=import('./analyticsPolicy.ts').AnalyticsTransport;
+ const resolvers:((transport:Transport)=>void)[]=[];const names:string[]=[];
+ const service=new ConsentAnalytics({platform:'desktop',operating_system:'windows',app_version:'0.5.0',ui_language:'en'},()=>new Promise(resolve=>resolvers.push(resolve)),()=>{});
+ const first=service.activate('guest',true);service.track('guest','payment_recorded');
+ const second=service.activate('firebase:p:bob',true);service.setScreen('firebase:p:bob','finance');service.track('firebase:p:bob','backup_exported');
+ resolvers[1]({emit:name=>names.push(name)});await second;resolvers[0]({emit:name=>names.push('stale:'+name)});await first;
+ assert.deepEqual(names,['app_opened','screen_view','backup_exported']);service.deactivate('guest');assert.equal(service.getStatus(),'enabled');
+});
+test('analytics failures and unsupported environments do not interrupt local work',async()=>{
+ const {ConsentAnalytics}=await import('./analyticsPolicy.ts');
+ const context={platform:'web' as const,operating_system:'linux' as const,app_version:'0.5.0',ui_language:'uk' as const};
+ const unsupported=new ConsentAnalytics(context,async()=>null,()=>{});await unsupported.activate('guest',true);assert.equal(unsupported.getStatus(),'unsupported');
+ const failed=new ConsentAnalytics(context,async()=>{throw Error('offline');},()=>{});await failed.activate('guest',true);assert.equal(failed.getStatus(),'error');
+ const broken=new ConsentAnalytics(context,async()=>({emit:()=>{throw Error('blocked');}}),()=>{});await broken.activate('guest',true);assert.doesNotThrow(()=>broken.track('guest','backup_restored'));
+});
+
+test('backup validation rejects malformed recurrence rules and impossible timestamps',()=>{
+ const w={...emptyWorkspace(),students:[{id:'s1',name:'Anna',subject:'',phone:'',price:50000,notes:'',archived:false}],lessons:[lesson]};
+ for(const rule of [null,{...weeklyRule,startDate:'2026-02-30'},{...weeklyRule,endDate:'2026-01-01'},{...weeklyRule,endDate:'2028-12-31'},{...weeklyRule,timeZone:undefined},{...weeklyRule,slots:[null]}]){
+  assert.throws(()=>validateWorkspace({...w,lessons:[{...lesson,seriesRule:rule}]}),/Некорректные данные занятия/);
+ }
+ for(const startsAt of ['2026-02-30T10:00:00Z','2026-10-23','2026-10-23T25:00:00Z','10/23/2026'])assert.throws(()=>validateWorkspace({...w,lessons:[{...lesson,startsAt}]}));
+ validateWorkspace({...w,lessons:[{...lesson,startsAt:'2026-10-23T12:00:00+02:00'}]});
+});
+test('series editor retains the original range and biweekly phase after a single moved occurrence',()=>{
+ const rule:RecurrenceRule={startDate:'2026-11-02',endDate:'2026-11-26',intervalWeeks:2,timeZone:'UTC',slots:[{weekday:1,time:'16:00'}]};let id=0;
+ const initial=createSeriesLessons({studentId:'s1',duration:60,price:50000,notes:'',rule},[],()=>String(++id));
+ initial[0]=moveLesson(initial,initial[0].id,'2026-11-09','16:00','UTC');
+ const draft=inferSeriesDraft(initial[0],initial,'UTC','scheduled',0);
+ assert.equal(draft.rule.startDate,'2026-11-02');assert.equal(draft.rule.endDate,'2026-11-26');
+ assert.deepEqual(generateOccurrences(draft.rule).map(o=>o.localDate),['2026-11-02','2026-11-16']);
+ draft.rule.slots.push({weekday:3,time:'18:00'});
+ assert.deepEqual(generateOccurrences(draft.rule).map(o=>o.localDate),['2026-11-02','2026-11-04','2026-11-16','2026-11-18']);
+});
+test('changing a single occurrence student detaches it without mutating its original series',async()=>{
+ const {lessonForStudent}=await import('./planning.ts');
+ const original={...lesson,seriesId:'series',seriesRule:weeklyRule};
+ const changed=lessonForStudent(original,'s2');assert.equal(changed.studentId,'s2');assert.equal(changed.seriesId,undefined);assert.equal(changed.seriesRule,undefined);
+ assert.equal(original.seriesId,'series');assert.equal(lessonForStudent(original,'s1').seriesId,'series');
+});
+test('single lessons reject DST gaps and ambiguities instead of silently shifting time',async()=>{
+ const {localLessonStart}=await import('./planning.ts');
+ assert.throws(()=>localLessonStart('2026-03-08T02:30','America/New_York'),/не существует/);
+ assert.throws(()=>localLessonStart('2026-11-01T01:30','America/New_York'),/неоднозначно/);
+ assert.equal(localLessonStart('2026-10-23T16:00','Europe/Kyiv'),'2026-10-23T13:00:00.000Z');
+ assert.equal(localLessonStart('2026-11-01T01:30','America/New_York','2026-11-01T06:30:00Z'),'2026-11-01T06:30:00Z');
+});
+test('financial month navigation cannot overflow into invalid extended years',async()=>{
+ const {isValidMonth,shiftMonth}=await import('./finance.ts');
+ assert.equal(isValidMonth('10000-01'),false);assert.equal(isValidMonth('0000-01'),false);
+ assert.equal(shiftMonth('9999-12',1),'9999-12');assert.equal(shiftMonth('0001-01',-1),'0001-01');
+ assert.equal(shiftMonth('2026-12',1),'2027-01');assert.equal(shiftMonth('invalid',1),'invalid');
+});
+test('auth failures also deactivate native data context; stale transitions cannot restore an old user',async()=>{
+ const {SessionTransitions}=await import('./sessionTransitions.ts');
+ type State=import('./sessionTransitions.ts').SessionState<string>;
+ const ready:(()=>void)[]=[];const states:State[]=[];
+ const transitions=new SessionTransitions<string>(()=>new Promise(resolve=>ready.push(resolve)),state=>states.push(state));
+ const alice=transitions.change('alice');const failure=transitions.change(null,'Auth unavailable');
+ ready[1]();await failure;ready[0]();await alice;
+ assert.deepEqual(states.at(-1),{ready:true,user:null,error:'Auth unavailable'});
+ const pending=transitions.change('bob');transitions.dispose();const count=states.length;ready[2]();await pending;await transitions.change('charlie');assert.equal(states.length,count);
+});

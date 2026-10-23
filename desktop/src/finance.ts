@@ -1,7 +1,14 @@
 import type { Workspace } from './domain.ts';
 import { zonedDate } from './planning.ts';
+export function isValidMonth(value:unknown):value is string {return typeof value==='string'&&/^(?!0000)\d{4}-(0[1-9]|1[0-2])$/.test(value);}
+export function shiftMonth(month:string,delta:number):string {
+ if(!isValidMonth(month)||!Number.isInteger(delta))return month;
+ const date=new Date(`${month}-15T12:00:00Z`);date.setUTCMonth(date.getUTCMonth()+delta);
+ if(!Number.isFinite(date.getTime()))return month;
+ const next=date.toISOString().slice(0,7);return isValidMonth(next)?next:month;
+}
 export function financialSummary(w:Workspace,month:string,timeZone:string){
- if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))throw new Error('Некорректный месяц');
+ if(!isValidMonth(month))throw new Error('Некорректный месяц');
  const period=(stamp:string)=>zonedDate(stamp,timeZone).slice(0,7);
  const rows=w.students.map(student=>{
   const lessons=w.lessons.filter(l=>l.studentId===student.id),payments=w.payments.filter(p=>p.studentId===student.id);

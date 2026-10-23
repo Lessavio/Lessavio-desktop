@@ -1,19 +1,9 @@
 import { hasConflict, type Lesson } from './domain.ts';
-export interface WeeklySlot { weekday: number; time: string }
-export interface RecurrenceRule { startDate: string; endDate: string; intervalWeeks: 1|2; timeZone: string; slots: WeeklySlot[] }
+import { calendarDate, validateRecurrenceRule, RecurrenceError, type WeeklySlot, type RecurrenceRule } from './recurrenceRule.ts';
+export { RecurrenceError, type WeeklySlot, type RecurrenceRule } from './recurrenceRule.ts';
 export interface Occurrence { startsAt: string; localDate: string; localTime: string; weekday: number }
 export interface SeriesDraft { studentId: string; duration: number; price: number; notes: string; rule: RecurrenceRule }
-export class RecurrenceError extends Error {
- values: Record<string,string|number>;
- constructor(message:string,values:Record<string,string|number>={}){super(message);this.values=values;}
-}
 const DAY=86400000;
-function calendarDate(value:string):number {
- if(!/^\d{4}-\d{2}-\d{2}$/.test(value))throw new RecurrenceError('Укажите корректные даты периода');
- const stamp=Date.parse(`${value}T00:00:00Z`);
- if(!Number.isFinite(stamp)||new Date(stamp).toISOString().slice(0,10)!==value)throw new RecurrenceError('Укажите корректные даты периода');
- return stamp;
-}
 function zonedParts(stamp:number,formatter:Intl.DateTimeFormat):number {
  const parts=Object.fromEntries(formatter.formatToParts(stamp).filter(p=>p.type!=='literal').map(p=>[p.type,Number(p.value)]));
  return Date.UTC(parts.year,parts.month-1,parts.day,parts.hour,parts.minute);
@@ -28,16 +18,8 @@ function wallTime(date:string,time:string,formatter:Intl.DateTimeFormat):string 
  return new Date(matches[0]).toISOString();
 }
 export function generateOccurrences(rule:RecurrenceRule):Occurrence[] {
+ validateRecurrenceRule(rule);
  const start=calendarDate(rule.startDate),end=calendarDate(rule.endDate);
- if(end<start)throw new RecurrenceError('Дата окончания должна быть не раньше даты начала');
- if(end-start>366*DAY)throw new RecurrenceError('Выберите период не длиннее одного года');
- if(![1,2].includes(rule.intervalWeeks))throw new RecurrenceError('Некорректный интервал повторения');
- if(!rule.slots.length)throw new RecurrenceError('Выберите хотя бы один день недели');
- const weekdays=new Set<number>();
- for(const slot of rule.slots){
-  if(!Number.isInteger(slot.weekday)||slot.weekday<1||slot.weekday>7||weekdays.has(slot.weekday)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(slot.time))throw new RecurrenceError('Укажите корректное время для каждого дня');
-  weekdays.add(slot.weekday);
- }
  let formatter:Intl.DateTimeFormat;
  try{formatter=new Intl.DateTimeFormat('en-GB',{timeZone:rule.timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});}catch{throw new RecurrenceError('Некорректный часовой пояс');}
  const monday=start-((new Date(start).getUTCDay()+6)%7)*DAY;

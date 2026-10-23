@@ -13,7 +13,7 @@ export function Calendar({lessons,students,language,timeZone,busy,onOpen,onMove}
  const scroller=useRef<HTMLDivElement>(null);
  useEffect(()=>{if(mode==='week'&&scroller.current)scroller.current.scrollTop=7*48;},[mode]);
  const name=(id:string)=>students.find(s=>s.id===id)?.name??'';
- const dayLessons=(date:string)=>lessons.filter(l=>zonedDate(l.startsAt,timeZone)===date).sort((a,b)=>a.startsAt.localeCompare(b.startsAt));
+ const dayLessons=(date:string)=>lessons.filter(l=>zonedDate(l.startsAt,timeZone)===date).sort((a,b)=>Date.parse(a.startsAt)-Date.parse(b.startsAt));
  const weekday=(date:string)=>(new Date(`${date}T12:00:00Z`).getUTCDay()+6)%7;
  const monthStart=`${anchor.slice(0,7)}-01`,monday=addDays(anchor,-weekday(anchor));
  const days=mode==='month'?Array.from({length:42},(_,i)=>addDays(monthStart,i-weekday(monthStart))):Array.from({length:7},(_,i)=>addDays(monday,i));

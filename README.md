@@ -1,6 +1,6 @@
 # Lessavio Desktop
 
-Formerly **Tutorly**. The source version is now **Lessavio 0.4.0**; your existing local workspace remains compatible.
+Formerly **Tutorly**. The source version is now **Lessavio 0.5.0**; your existing local workspace remains compatible.
 
 **Your students, lessons, and payments — in one offline desktop app.**
 
@@ -19,11 +19,23 @@ Formerly **Tutorly**. The source version is now **Lessavio 0.4.0**; your existin
 
 **A private, offline desktop workspace for independent tutors.**
 
-Lessavio helps you organize students, schedule lessons, and track payments on your own computer. Each tutor sets up a local profile and works with their own data. There is no online registration, hosted backend, or cloud database to configure or pay for.
+Lessavio helps you organize students, schedule lessons, and track payments on your own computer. Each tutor sets up a local profile and works with their own data. A local-only mode needs no account or hosted database. Source version 0.5.0 also adds optional Firebase email/password accounts; teaching records remain local and cloud synchronization is not enabled.
 
 Built with **Tauri 2, React, TypeScript, Rust, and SQLite** for macOS and Windows.
 
-> **Source version: Lessavio 0.4.0 — early preview.** Includes Russian, Ukrainian, and English, improved selectors, and recurring lessons with separate times for each weekday. Universal macOS and Windows x64 installers are provided through GitHub Releases. Full native installation and interface testing on both platforms remains pending. Current installers are not signed with a publisher certificate.
+> **Source version: Lessavio 0.5.0 — early preview.** Includes Russian, Ukrainian, and English, improved selectors, and recurring lessons with separate times for each weekday. Universal macOS and Windows x64 installers are provided through GitHub Releases. Full native installation and interface testing on both platforms remains pending. Current installers are not signed with a publisher certificate.
+
+## Optional accounts (source version 0.5.0)
+
+Choose **Sign in or create an account**, or **Continue without an account**. Email/password accounts support verification email, password reset, and saved sessions. Account actions use Firebase Authentication and need internet access; previously restored sessions can continue using local records offline.
+
+Each account opens a separate local workspace. Sign-out preserves its data. Existing data from 0.4.0 stays in the workspace available without an account; sign in and use **Settings → Lessavio account → Data from before registration → Copy local data** to copy it into an empty account workspace. The original remains available and the copies do not synchronize.
+
+This change is in source version 0.5.0; download buttons still provide the published 0.4.0 installers. See [account setup and future sync architecture](docs/accounts-and-sync.md). Export a backup before upgrading; after editing in 0.5.0, do not downgrade to 0.4.0 because older binaries read the legacy migration snapshot.
+
+## Optional usage analytics (source version 0.5.0)
+
+In **Settings → Usage analytics**, choose **Help improve Lessavio** to enable Google Analytics for Firebase. It is off by default. Collection includes app/screen/feature usage and technical metadata, not student records, email addresses, Firebase auth UIDs, lesson dates, or payment amounts. Google processes browser/installation identifiers and network metadata. Your choice stays on this device and can be turned off at any time. Teaching data remains local. See [Analytics details and setup](docs/analytics.md).
 
 ## Contents
 
@@ -310,6 +322,6 @@ For tests, architecture details, and release publishing, see the [developer guid
 
 ## Current limitations
 
-Version 0.4.0 does not include automatic synchronization, multiple in-app profiles, automatic updates, payment editing, or an internal snapshot recovery screen. Recurring lessons are generated through the end date you select; they do not extend automatically. To correct a payment, remove the incorrect entry and record a new one.
+Version 0.4.0 does not include automatic synchronization, automatic updates, payment editing, or an internal snapshot recovery screen. Recurring lessons are generated through the end date you select; they do not extend automatically. To correct a payment, remove the incorrect entry and record a new one.
 
 This is a new desktop implementation. The older web application remains in `client/` and `src/`; it is not used by Lessavio Desktop, and its data is not imported.
