@@ -62,8 +62,8 @@ Last reviewed: 2026-10-23 (Europe/Kyiv). Update this file when architecture or r
 
 ## Release state
 
-- Repository: `Valentin-Holovin/Tutorly`. Last verified published release: 0.4.0.
+- Repository: `Valentin-Holovin/Tutorly`. Last verified published release: 0.5.0 (desktop-v0.5.0), built from fd820fb.
 - Current source version: 0.5.0; authentication, analytics and review fixes are included in the local 0.5.0 commit. Inspect Git status before editing; preserve existing work.
 - Workflow: `.github/workflows/desktop-release.yml`, macOS universal and Windows NSIS. Verify both uploaded installers and stable download aliases before calling a release complete.
-- Existing local 0.5.0 installer may predate review fixes: rebuild before distributing it. No GitHub release was created by this review.
+- GitHub Actions run 39988826871 successfully built macOS universal and Windows x64 installers. Release 0.5.0 is published with both stable download aliases. Local Apple Silicon DMG was also rebuilt after review; its image checksum passed verification.
 - More details: `docs/accounts-and-sync.md`, `docs/analytics.md`, `docs/quality-review-2026-10-23.md`.
