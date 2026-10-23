@@ -1,0 +1,44 @@
+export interface Profile { name: string; currency: 'UAH' | 'EUR' | 'USD'; timeZone: string }
+export interface Student { id: string; name: string; subject: string; phone: string; price: number; notes: string; archived: boolean }
+export interface Lesson { id: string; studentId: string; startsAt: string; duration: number; price: number; status: 'scheduled' | 'completed' | 'cancelled'; notes: string }
+export interface Payment { id: string; studentId: string; amount: number; paidAt: string }
+export interface Workspace { version: 1; profile: Profile | null; students: Student[]; lessons: Lesson[]; payments: Payment[] }
+export const emptyWorkspace = (): Workspace => ({ version: 1, profile: null, students: [], lessons: [], payments: [] });
+export function validateWorkspace(value: unknown): asserts value is Workspace {
+  const w = value as Workspace;
+  if (!w || w.version !== 1 || !Array.isArray(w.students) || !Array.isArray(w.lessons) || !Array.isArray(w.payments)) throw Error('Неподдерживаемый формат резервной копии');
+  const text = (v: unknown, max = 10000) => typeof v === 'string' && v.length <= max;
+  const money = (v: unknown) => Number.isSafeInteger(v) && (v as number) >= 0;
+  const date = (v: unknown) => text(v, 100) && Number.isFinite(Date.parse(v as string));
+  if (w.profile !== null) {
+    if (!w.profile || !text(w.profile.name, 100) || !w.profile.name.trim() || !['UAH','EUR','USD'].includes(w.profile.currency) || !text(w.profile.timeZone,100) || !w.profile.timeZone) throw Error('Некорректный профиль');
+    try { new Intl.DateTimeFormat('ru', {timeZone: w.profile.timeZone}).format(); } catch { throw Error('Некорректный часовой пояс'); }
+  }
+  const ids = new Set<string>();
+  for (const s of w.students) {
+    if (!s || !text(s.id,100) || !s.id || ids.has(s.id) || !text(s.name,100) || !s.name.trim() || !text(s.subject,200) || !text(s.phone,100) || !text(s.notes) || !money(s.price) || typeof s.archived !== 'boolean') throw Error('Некорректные данные ученика');
+    ids.add(s.id);
+  }
+  const lessonIds = new Set<string>();
+  for (const l of w.lessons) {
+    if (!l || !text(l.id,100) || !l.id || lessonIds.has(l.id) || !ids.has(l.studentId) || !date(l.startsAt) || !Number.isInteger(l.duration) || l.duration < 15 || l.duration > 480 || !money(l.price) || !['scheduled','completed','cancelled'].includes(l.status) || !text(l.notes)) throw Error('Некорректные данные занятия');
+    lessonIds.add(l.id);
+  }
+  const paymentIds = new Set<string>();
+  for (const p of w.payments) {
+    if (!p || !text(p.id,100) || !p.id || paymentIds.has(p.id) || !ids.has(p.studentId) || !money(p.amount) || p.amount === 0 || !date(p.paidAt)) throw Error('Некорректные данные оплаты');
+    paymentIds.add(p.id);
+  }
+}
+export function hasConflict(lessons: Lesson[], candidate: Lesson): boolean {
+  if (candidate.status === 'cancelled') return false;
+  const start = Date.parse(candidate.startsAt), end = start + candidate.duration * 60000;
+  return lessons.some(l => l.id !== candidate.id && l.status !== 'cancelled' && Date.parse(l.startsAt) < end && Date.parse(l.startsAt) + l.duration * 60000 > start);
+}
+export function balance(w: Workspace, studentId: string): number {
+  return w.payments.filter(p=>p.studentId===studentId).reduce((n,p)=>n+p.amount,0) - w.lessons.filter(l=>l.studentId===studentId && l.status==='completed').reduce((n,l)=>n+l.price,0);
+}
+export function moneyInput(value: string): number {
+  if (!/^\d{1,8}([.,]\d{1,2})?$/.test(value)) throw Error('Укажите сумму с точностью до копеек');
+  return Math.round(Number(value.replace(',', '.')) * 100);
+}

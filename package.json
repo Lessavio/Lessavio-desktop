@@ -19,7 +19,10 @@
     "dev:server": "ts-node-dev --respawn --files src/index.ts",
     "dev:client": "npm run dev --workspace=tutorly-client",
     "db:migrate": "ts-node --files src/database/migrate.ts",
-    "db:import-json": "ts-node --files src/database/import-json.ts"
+    "db:import-json": "ts-node --files src/database/import-json.ts",
+    "desktop:dev": "npm run desktop --prefix desktop",
+    "desktop:build": "npm run bundle --prefix desktop",
+    "desktop:test": "npm run test --prefix desktop"
   },
   "dependencies": {
     "dotenv": "17.4.2",

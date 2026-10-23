@@ -9,3 +9,6 @@ data/*.json
 .DS_Store
 *.log
 .neon
+desktop/node_modules/
+desktop/dist/
+desktop/src-tauri/target/
