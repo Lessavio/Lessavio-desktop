@@ -6,12 +6,12 @@ Formerly **Tutorly**. The source version is now **Lessavio 0.4.0**; your existin
 
 ## Download and install
 
-[![Install for Windows](https://img.shields.io/badge/Install_for_Windows-Download_EXE-2563EB?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.2.0/Tutorly-Windows-Setup.exe)
-[![Install for macOS](https://img.shields.io/badge/Install_for_macOS-Download_DMG-2F6D56?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.2.0/Tutorly-macOS.dmg)
+[![Install for Windows](https://img.shields.io/badge/Install_for_Windows-Download_EXE-2563EB?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.4.0/Lessavio-Windows-Setup.exe)
+[![Install for macOS](https://img.shields.io/badge/Install_for_macOS-Download_DMG-2F6D56?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.4.0/Lessavio-macOS.dmg)
 
 **Windows:** download and run the installer. **Mac:** open the DMG and drag the app into Applications. The macOS release download is intended for both Apple Silicon and Intel Macs.
 
-> **Download status:** the buttons currently download the published **Tutorly 0.2.0** installers. The renamed **Lessavio 0.4.0** release has not been published yet. Existing links remain valid. The Mac installer supports Apple Silicon and Intel; the Windows installer is for x64 PCs. These are unsigned preview builds. See the [release notes](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.2.0).
+> **Download status:** **Lessavio 0.4.0** is published with installers for macOS (Apple Silicon and Intel) and Windows x64. These are unsigned preview builds. See the [release notes](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.4.0).
 
 [Detailed macOS installation](#macos) · [Detailed Windows installation](#windows)
 
@@ -65,7 +65,7 @@ Open the repository's **[Releases page](https://github.com/Valentin-Holovin/Tuto
 
 On a Mac, open **Apple menu → About This Mac** to check the processor.
 
-**Availability:** [version 0.2.0](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.2.0) includes published macOS and Windows installers. Future workflow runs create a draft release that the maintainer must publish. GitHub's “Source code” ZIP and TAR.GZ downloads are source files, not installers.
+**Availability:** [version 0.4.0](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.4.0) includes published macOS and Windows installers. Future workflow runs create a draft release that the maintainer must publish. GitHub's “Source code” ZIP and TAR.GZ downloads are source files, not installers.
 
 You do **not** need Git, Node.js, Rust, or PostgreSQL to use a ready-made installer.
 
@@ -73,9 +73,9 @@ You do **not** need Git, Node.js, Rust, or PostgreSQL to use a ready-made instal
 
 1. Download the `.dmg` matching your processor.
 2. Double-click it to mount the disk image.
-3. Drag the application into **Applications**. The published 0.2.0 app is named **Tutorly.app**; the 0.3.0 source build is named **Lessavio.app**.
+3. Drag the application into **Applications**. The application is named **Lessavio.app**.
 4. Eject the disk image.
-5. Open the installed application: **Tutorly** for 0.2.0, **Lessavio** for 0.3.0.
+5. Open **Lessavio** from Applications.
 6. Complete the local profile setup described below.
 
 Current preview builds are not signed with an Apple Developer ID or notarized. macOS may display an unidentified developer warning or block opening the application. Verify that you obtained the file from this repository or its maintainer. If the system blocks it, use Apple's documented approval flow only if you trust the build; no system-wide security changes are required by Lessavio. Maintainers should configure signing and notarization for public distribution. See [Tauri's macOS signing documentation](https://v2.tauri.app/distribute/sign/macos/).
@@ -84,7 +84,7 @@ Current preview builds are not signed with an Apple Developer ID or notarized. m
 
 1. Download the Windows `setup.exe` installer.
 2. Open it and follow the installation wizard.
-3. Launch the app from the Start menu or its shortcut (**Tutorly** for 0.2.0, **Lessavio** for 0.3.0).
+3. Launch the app from the Start menu or its shortcut (**Lessavio**).
 4. Complete the local profile setup described below.
 
 The Windows app uses **Microsoft Edge WebView2 Runtime** to display its interface. If it is missing, the installer may need an internet connection to download it. Once installed, Lessavio's normal features work offline. See [Tauri's Windows installer documentation](https://v2.tauri.app/distribute/windows-installer/).
@@ -182,7 +182,7 @@ Avoid moving or copying the live SQLite files while Lessavio is open. Use the ap
 - **Financial overview:** choose a month to see payments received, completed lesson value, planned value, and student balances. Month-end debt and credit include earlier history and remain separate across students. Dates follow the profile time zone.
 - **Local reminders:** in Settings, select 5, 10, 15, 30, or 60 minutes and allow system notifications. A test button checks delivery. Reminders run in the native process while the app is open, including when minimized; they stop after quitting. The computer must be awake, and OS notification settings apply. After sleep, reminders are sent only for lessons that have not started. Sent reminders are tracked locally in SQLite to prevent repeated delivery after restart.
 
-These features are available in the 0.4.0 source build; the download buttons still point to the published 0.2.0 release until a new release is published.
+These features are included in the published Lessavio 0.4.0 installers linked at the top of the main README.
 
 ## Rename compatibility (0.3.0)
 
@@ -200,7 +200,7 @@ Export a backup and quit Tutorly before launching Lessavio. On macOS, the new bu
 4. Install it in the same way as the original version, replacing the existing app when prompted.
 5. Open Lessavio and check your workspace.
 
-Automatic updates are not implemented in version 0.2.0. Data is stored separately from the application bundle, but keeping an external backup before an update is recommended.
+Automatic updates are not implemented in version 0.4.0. Data is stored separately from the application bundle, but keeping an external backup before an update is recommended.
 
 ### Uninstall
 
@@ -303,6 +303,6 @@ For tests, architecture details, and release publishing, see the [developer guid
 
 ## Current limitations
 
-Version 0.2.0 does not include automatic synchronization, multiple in-app profiles, automatic updates, payment editing, or an internal snapshot recovery screen. Recurring lessons are generated through the end date you select; they do not extend automatically. To correct a payment, remove the incorrect entry and record a new one.
+Version 0.4.0 does not include automatic synchronization, multiple in-app profiles, automatic updates, payment editing, or an internal snapshot recovery screen. Recurring lessons are generated through the end date you select; they do not extend automatically. To correct a payment, remove the incorrect entry and record a new one.
 
 This is a new desktop implementation. The older web application remains in `client/` and `src/`; it is not used by Lessavio Desktop, and its data is not imported.
