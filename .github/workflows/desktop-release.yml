@@ -36,7 +36,7 @@ jobs:
           projectPath: desktop
           tagName: desktop-v__VERSION__
           releaseName: Lessavio Desktop v__VERSION__
-          releaseBody: 'Скачайте .dmg для Mac или setup.exe для Windows. Тестовые установщики без подписи издателя.'
+          releaseBody: 'Download the .dmg installer for macOS or setup.exe for Windows. Preview installers are unsigned.'
           releaseDraft: true
           prerelease: true
           args: ${{ matrix.args }}

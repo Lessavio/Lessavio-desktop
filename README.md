@@ -112,7 +112,7 @@ Recurring lessons are included in version 0.2.0. Install the current release to 
 
 ### Interface language (0.2.0)
 
-At first launch or in **Settings → Interface language**, choose **Русский**, **Українська**, or **English**. On an existing profile, changing the language applies and saves it immediately. Your preference is retained after reopening the desktop app and is included in backups. Existing profiles without a language preference continue in Russian.
+New installations start in **English**, regardless of the system language. At first launch or in **Settings → Interface language**, choose **Русский**, **Українська**, or **English**. On an existing profile, changing the language applies and saves it immediately. Your preference is retained after reopening the desktop app and is included in backups. Existing profiles without a language preference continue in Russian.
 
 Language selection is included in the version 0.2.0 installers.
 

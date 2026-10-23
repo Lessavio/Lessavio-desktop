@@ -14,7 +14,7 @@ The release workflow derives stable download filenames from `productName`: `Less
 
 ## Interface languages (0.2.0)
 
-Settings and first-run setup include **Русский**, **Українська**, and **English**. Existing profiles without a language field continue in Russian. New workspaces detect a supported system language, falling back to English. Changing the language on an existing profile saves it immediately through the normal SQLite transaction. The preference is also included in exported backups; older backups without it remain supported.
+Settings and first-run setup include **Русский**, **Українська**, and **English**. Existing profiles without a language field continue in Russian. New workspaces always start in English, regardless of the system language. Changing the language on an existing profile saves it immediately through the normal SQLite transaction. The preference is also included in exported backups; older backups without it remain supported.
 
 Translations cover navigation, screens, forms, notifications, validation errors, and app-provided file dialog titles. Dates, times, currency formatting, and month names use the selected locale. Operating-system dialog controls follow the OS language. Technical errors from SQLite or the operating system may retain their original wording.
 

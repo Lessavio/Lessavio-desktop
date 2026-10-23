@@ -1,7 +1,7 @@
 import { moveLesson, inferSeriesDraft, editableSeries, replaceSeries, zonedDate, zonedTime } from './planning.ts';
 import { financialSummary } from './finance.ts';
 import { generateOccurrences, createSeriesLessons, seriesConflicts, cancelUpcomingSeries, type RecurrenceRule } from './recurrence.ts';
-import { detectLanguage, translator, locales } from './i18n.ts';
+import { defaultLanguage, translator, locales } from './i18n.ts';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -23,10 +23,8 @@ test('language preferences round-trip and legacy profiles remain valid',()=>{
  assert.throws(()=>validateWorkspace({...legacy,profile:{...profile,language:'de'}}));
 });
 
-test('language detection, interpolation and localized date formatting',()=>{
- assert.equal(detectLanguage(['uk-UA','en-US']),'uk');
- assert.equal(detectLanguage(['fr-FR','ru-RU']),'ru');
- assert.equal(detectLanguage(['de-DE']),'en');
+test('English first-run default, interpolation and localized date formatting',()=>{
+ assert.equal(defaultLanguage,'en');
  assert.equal(translator('en')('Хорошего дня, {name}',{name:'Alex'}),'Have a good day, Alex');
  assert.equal(translator('uk')('Настройки'),'Налаштування');
  assert.equal(translator('ru')('Настройки'),'Настройки');

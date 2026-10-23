@@ -12,7 +12,7 @@ import { balance, emptyWorkspace, hasConflict, moneyInput, type Lesson, type Pro
 import * as storage from './storage';
 import { Select } from './components/Select';
 import { DateTimePicker } from './components/DateTimePicker';
-import { detectLanguage, languages, locales, translator, type Language } from './i18n';
+import { defaultLanguage, languages, locales, translator, type Language } from './i18n';
 type View = 'today' | 'calendar' | 'students' | 'finance' | 'settings';
 type Modal = {kind:'editSeries'; lesson:Lesson} | {kind:'series'; studentId?:string} | {
     kind: 'student';
@@ -33,7 +33,7 @@ function FormField({ label, children }: {
 export function App() {
     const [w, setW] = useState<Workspace>(emptyWorkspace), [loading, setLoading] = useState(true), [loadFailed, setLoadFailed] = useState(false), [error, setError] = useState(''), [busy, setBusy] = useState(false), [view, setView] = useState<View>('today'), [modal, setModal] = useState<Modal>(null), [query, setQuery] = useState(''), [showArchived, setShowArchived] = useState(false), [notice, setNotice] = useState(''), [restoring, setRestoring] = useState<Workspace | null>(null);
     const lock = useRef(false);
-    const [welcomeLanguage, setWelcomeLanguage] = useState<Language>(() => detectLanguage(navigator.languages));
+    const [welcomeLanguage, setWelcomeLanguage] = useState<Language>(defaultLanguage);
     const language = w.profile ? w.profile.language ?? 'ru' : welcomeLanguage;
     const locale = locales[language];
     const t = translator(language);

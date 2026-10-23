@@ -2,15 +2,9 @@ import ru from './locales/ru.json' with { type: 'json' };
 import uk from './locales/uk.json' with { type: 'json' };
 import en from './locales/en.json' with { type: 'json' };
 export type Language = 'ru' | 'uk' | 'en';
-export const languages = [{value:'ru',label:'Русский'},{value:'uk',label:'Українська'},{value:'en',label:'English'}] as const;
+export const languages = [{value:'en',label:'English'},{value:'ru',label:'Русский'},{value:'uk',label:'Українська'}] as const;
 export const locales: Record<Language,string> = {ru:'ru-RU',uk:'uk-UA',en:'en-US'};
-export function detectLanguage(languages: readonly string[]): Language {
-  for (const language of languages) {
-    const code=language.toLowerCase().split(/[-_]/)[0];
-    if (code==='ru'||code==='uk'||code==='en') return code;
-  }
-  return 'en';
-}
+export const defaultLanguage: Language = 'en';
 const dictionaries: Record<Language,Record<string,string>> = {ru,uk,en};
 export function translator(language: Language) {
   return (key: string, values: Record<string,string|number> = {}) => {
