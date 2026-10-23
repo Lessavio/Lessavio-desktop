@@ -80,6 +80,13 @@ You do **not** need Git, Node.js, Rust, or PostgreSQL to use a ready-made instal
 
 Current preview builds are not signed with an Apple Developer ID or notarized. macOS may display an unidentified developer warning or block opening the application. Verify that you obtained the file from this repository or its maintainer. If the system blocks it, use Apple's documented approval flow only if you trust the build; no system-wide security changes are required by Lessavio. Maintainers should configure signing and notarization for public distribution. See [Tauri's macOS signing documentation](https://v2.tauri.app/distribute/sign/macos/).
 
+
+![macOS installation: 1. Select Privacy & Security; 2. Click Open Anyway.](docs/images/macos-open-anyway-guide.png)
+
+**1 — Privacy & Security. 2 — Open Anyway.** Scroll down to the Security section first. The button appears after macOS blocks an attempted launch.
+
+*Illustrative screenshot from [Apple Support](https://support.apple.com/en-us/102445), annotated with AI-assisted arrows. “Example App” represents Lessavio; macOS layout and wording may vary.*
+
 ### Windows
 
 1. Download the Windows `setup.exe` installer.
