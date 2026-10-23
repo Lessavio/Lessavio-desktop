@@ -9,6 +9,23 @@ Tutorly is now Lessavio. Existing local workspaces and JSON backups remain compa
 
 Open the DMG and drag Lessavio into Applications, or run the Windows installer. If Tutorly is still installed, use Lessavio from now on; both versions use the existing local workspace location.
 
+### Install on macOS (unsigned preview)
+
+Lessavio does not yet have an Apple Developer ID signature or notarization. macOS may block its first launch because Apple cannot verify the developer. Only proceed if you trust this download from this repository.
+
+1. In **Assets** below, download **Lessavio-macOS.dmg** (supports Apple Silicon and Intel). Do not download the Source code archives.
+2. Open the DMG and drag **Lessavio.app** into **Applications**.
+3. Eject the disk image, then open **Lessavio** from **Finder → Applications**.
+4. If macOS blocks the app, dismiss the warning without moving the app to Trash.
+5. Open **Apple menu → System Settings → Privacy & Security** and scroll to **Security**.
+6. Find the message about Lessavio and click **Open Anyway**. This option appears after an attempted launch; if it is missing, try opening Lessavio again and return to these settings.
+7. Authenticate with your Mac password or Touch ID if requested, then click **Open** in the confirmation dialog.
+8. Complete the local profile setup. Later launches normally work from Applications.
+
+This grants an exception for this app. You do not need to disable Gatekeeper or run Terminal commands. If macOS explicitly reports malware or damage, stop and obtain a fresh installer from this repository instead of bypassing that warning.
+
+See [Apple's official instructions for opening an unverified app](https://support.apple.com/en-us/102445).
+
 ### What's new
 
 - Edit future lessons or all scheduled lessons in a recurring series, with preview and conflict checks. Completed/cancelled history and payments are preserved.
