@@ -69,7 +69,7 @@ export function createSeriesLessons(draft:SeriesDraft,existing:Lesson[],id:()=>s
  const occurrences=generateOccurrences(draft.rule);
  if(seriesConflicts(occurrences,existing,draft.duration).length)throw new RecurrenceError('Есть пересечения с расписанием. Измените дни или время.');
  const seriesId=id();
- return occurrences.map(occurrence=>({id:id(),seriesId,studentId:draft.studentId,startsAt:occurrence.startsAt,duration:draft.duration,price:draft.price,notes:draft.notes,status:'scheduled'}));
+ return occurrences.map(occurrence=>({id:id(),seriesId,seriesRule:draft.rule,studentId:draft.studentId,startsAt:occurrence.startsAt,duration:draft.duration,price:draft.price,notes:draft.notes,status:'scheduled'}));
 }
 
 export function cancelUpcomingSeries(lessons:Lesson[],seriesId:string,now=Date.now()):Lesson[]{

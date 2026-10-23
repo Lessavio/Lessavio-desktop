@@ -1,4 +1,6 @@
-# Tutorly Desktop
+# Lessavio Desktop
+
+Formerly **Tutorly**. The source version is now **Lessavio 0.4.0**; your existing local workspace remains compatible.
 
 **Your students, lessons, and payments — in one offline desktop app.**
 
@@ -7,9 +9,9 @@
 [![Install for Windows](https://img.shields.io/badge/Install_for_Windows-Download_EXE-2563EB?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.2.0/Tutorly-Windows-Setup.exe)
 [![Install for macOS](https://img.shields.io/badge/Install_for_macOS-Download_DMG-2F6D56?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.2.0/Tutorly-macOS.dmg)
 
-**Windows:** download and run the installer. **Mac:** open the DMG and drag Tutorly into Applications. The macOS release download is intended for both Apple Silicon and Intel Macs.
+**Windows:** download and run the installer. **Mac:** open the DMG and drag the app into Applications. The macOS release download is intended for both Apple Silicon and Intel Macs.
 
-> **Version 0.2.0 is available:** the buttons download the published installers directly. The Mac installer supports Apple Silicon and Intel; the Windows installer is for x64 PCs. These are unsigned preview builds. See the [release notes](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.2.0).
+> **Download status:** the buttons currently download the published **Tutorly 0.2.0** installers. The renamed **Lessavio 0.4.0** release has not been published yet. Existing links remain valid. The Mac installer supports Apple Silicon and Intel; the Windows installer is for x64 PCs. These are unsigned preview builds. See the [release notes](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.2.0).
 
 [Detailed macOS installation](#macos) · [Detailed Windows installation](#windows)
 
@@ -17,11 +19,11 @@
 
 **A private, offline desktop workspace for independent tutors.**
 
-Tutorly helps you organize students, schedule lessons, and track payments on your own computer. Each tutor sets up a local profile and works with their own data. There is no online registration, hosted backend, or cloud database to configure or pay for.
+Lessavio helps you organize students, schedule lessons, and track payments on your own computer. Each tutor sets up a local profile and works with their own data. There is no online registration, hosted backend, or cloud database to configure or pay for.
 
 Built with **Tauri 2, React, TypeScript, Rust, and SQLite** for macOS and Windows.
 
-> **Current version: 0.2.0 — early preview.** Includes Russian, Ukrainian, and English, improved selectors, and recurring lessons with separate times for each weekday. Universal macOS and Windows x64 installers are provided through GitHub Releases. Full native installation and interface testing on both platforms remains pending. Current installers are not signed with a publisher certificate.
+> **Source version: Lessavio 0.4.0 — early preview.** Includes Russian, Ukrainian, and English, improved selectors, and recurring lessons with separate times for each weekday. Universal macOS and Windows x64 installers are provided through GitHub Releases. Full native installation and interface testing on both platforms remains pending. Current installers are not signed with a publisher certificate.
 
 ## Contents
 
@@ -47,7 +49,7 @@ Built with **Tauri 2, React, TypeScript, Rust, and SQLite** for macOS and Window
 | Payments | Record payments, view a student's payment history, and remove an incorrect entry after confirmation. |
 | Settings | Set your name, currency, and time zone. Export and restore a backup. |
 
-Tutorly runs locally after installation. You do not need an internet connection for everyday work, and you do not need to install a database server.
+Lessavio runs locally after installation. You do not need an internet connection for everyday work, and you do not need to install a database server.
 
 ## Install the application
 
@@ -71,21 +73,21 @@ You do **not** need Git, Node.js, Rust, or PostgreSQL to use a ready-made instal
 
 1. Download the `.dmg` matching your processor.
 2. Double-click it to mount the disk image.
-3. Drag **Tutorly.app** into your **Applications** folder.
+3. Drag the application into **Applications**. The published 0.2.0 app is named **Tutorly.app**; the 0.3.0 source build is named **Lessavio.app**.
 4. Eject the disk image.
-5. Open **Applications → Tutorly**.
+5. Open the installed application: **Tutorly** for 0.2.0, **Lessavio** for 0.3.0.
 6. Complete the local profile setup described below.
 
-Current preview builds are not signed with an Apple Developer ID or notarized. macOS may display an unidentified developer warning or block opening the application. Verify that you obtained the file from this repository or its maintainer. If the system blocks it, use Apple's documented approval flow only if you trust the build; no system-wide security changes are required by Tutorly. Maintainers should configure signing and notarization for public distribution. See [Tauri's macOS signing documentation](https://v2.tauri.app/distribute/sign/macos/).
+Current preview builds are not signed with an Apple Developer ID or notarized. macOS may display an unidentified developer warning or block opening the application. Verify that you obtained the file from this repository or its maintainer. If the system blocks it, use Apple's documented approval flow only if you trust the build; no system-wide security changes are required by Lessavio. Maintainers should configure signing and notarization for public distribution. See [Tauri's macOS signing documentation](https://v2.tauri.app/distribute/sign/macos/).
 
 ### Windows
 
 1. Download the Windows `setup.exe` installer.
 2. Open it and follow the installation wizard.
-3. Launch **Tutorly** from the Start menu or the shortcut created by the installer.
+3. Launch the app from the Start menu or its shortcut (**Tutorly** for 0.2.0, **Lessavio** for 0.3.0).
 4. Complete the local profile setup described below.
 
-The Windows app uses **Microsoft Edge WebView2 Runtime** to display its interface. If it is missing, the installer may need an internet connection to download it. Once installed, Tutorly's normal features work offline. See [Tauri's Windows installer documentation](https://v2.tauri.app/distribute/windows-installer/).
+The Windows app uses **Microsoft Edge WebView2 Runtime** to display its interface. If it is missing, the installer may need an internet connection to download it. Once installed, Lessavio's normal features work offline. See [Tauri's Windows installer documentation](https://v2.tauri.app/distribute/windows-installer/).
 
 Windows may show an unknown publisher or SmartScreen warning for an unsigned preview installer. Verify the source before proceeding; contact the maintainer if you are unsure. The current workflow does not produce a Windows ARM-specific build.
 
@@ -98,7 +100,7 @@ Windows may show an unknown publisher or SmartScreen warning for an unsigned pre
 5. **Record a payment.** Open the student card and select **Записать оплату** (Record payment).
 6. **Save a backup.** Open **Настройки** (Settings) and export a copy to a safe location.
 
-There is no email address, password, or online account. Reopening Tutorly loads the saved workspace for the current operating-system account.
+There is no email address, password, or online account. Reopening Lessavio loads the saved workspace for the current operating-system account.
 
 ### Recurring lessons (0.2.0)
 
@@ -141,12 +143,12 @@ Scheduled and cancelled lessons do not deduct money. Marking a completed lesson 
 
 ### Where data lives
 
-Tutorly stores a local SQLite database named `tutorly.sqlite` in the operating system's application data directory, separately from the installed program.
+Lessavio stores a local SQLite database named `tutorly.sqlite` in the operating system's application data directory, separately from the installed program.
 
 - **macOS:** `~/Library/Application Support/com.tutorly.desktop/`
 - **Windows:** the system application data directory for `com.tutorly.desktop`, normally `%APPDATA%\com.tutorly.desktop\`.
 
-Tutorly does not upload your student records, schedule, or payments to GitHub or a cloud service. The desktop app does not require the older web application's backend or environment variables. The local database and exported backups are not encrypted by Tutorly; protect access to your computer and backup files.
+Lessavio does not upload your student records, schedule, or payments to GitHub or a cloud service. The desktop app does not require the older web application's backend or environment variables. The local database and exported backups are not encrypted by Lessavio; protect access to your computer and backup files.
 
 Each OS account has its own application data directory. Separate computers do not share or automatically synchronize data. There is one tutor profile per local workspace in this version; there is no in-app profile switcher.
 
@@ -162,33 +164,48 @@ A backup contains the profile, students, lessons, and payment history. It includ
 ### Restore a backup or move to another computer
 
 1. Export a backup on the original computer.
-2. Install Tutorly on the destination computer. If prompted, create a temporary local profile to reach Settings.
+2. Install Lessavio on the destination computer. If prompted, create a temporary local profile to reach Settings.
 3. Open **Настройки** (Settings) and select **Восстановить из копии** (Restore from backup).
-4. Select the exported Tutorly `.json` file.
+4. Select the exported Lessavio `.json` file.
 5. Review the confirmation and approve restoration.
 
-**Restoration replaces the current workspace; it does not merge records.** Export the current workspace first if you want to keep it. Tutorly validates the backup format before saving it. The current file-size limit is 20 MB.
+**Restoration replaces the current workspace; it does not merge records.** Export the current workspace first if you want to keep it. Lessavio validates the backup format before saving it. The current file-size limit is 20 MB.
 
-Tutorly also keeps up to 14 internal daily snapshots in the same SQLite database. They do not have a recovery screen yet and are not a substitute for an external backup.
+Lessavio also keeps up to 14 internal daily snapshots in the same SQLite database. They do not have a recovery screen yet and are not a substitute for an external backup.
 
-Avoid moving or copying the live SQLite files while Tutorly is open. Use the app's export feature for normal backups and transfers.
+Avoid moving or copying the live SQLite files while Lessavio is open. Use the app's export feature for normal backups and transfers.
+
+## Scheduling, finances, and reminders (0.4.0)
+
+- **Edit a series:** open an occurrence and choose **Edit series**. Apply changes to future lessons or all scheduled lessons. Adjust weekdays, times, duration, price, and end date with a preview and conflict checks. Completed and cancelled records and payments are preserved; protected dates are not recreated.
+- **Drag to reschedule:** drag a scheduled lesson onto another day in Month view or a time slot in Week view (30-minute snapping). Review the date and exact time before confirming. Moving one occurrence does not change the rest of its series. Completed and cancelled lessons cannot be dragged.
+- **Financial overview:** choose a month to see payments received, completed lesson value, planned value, and student balances. Month-end debt and credit include earlier history and remain separate across students. Dates follow the profile time zone.
+- **Local reminders:** in Settings, select 5, 10, 15, 30, or 60 minutes and allow system notifications. A test button checks delivery. Reminders run in the native process while the app is open, including when minimized; they stop after quitting. The computer must be awake, and OS notification settings apply. After sleep, reminders are sent only for lessons that have not started. Sent reminders are tracked locally in SQLite to prevent repeated delivery after restart.
+
+These features are available in the 0.4.0 source build; the download buttons still point to the published 0.2.0 release until a new release is published.
+
+## Rename compatibility (0.3.0)
+
+Lessavio is the new name of Tutorly. Version 0.3.0 intentionally keeps the existing `com.tutorly.desktop` identifier and `tutorly.sqlite` database filename so it can open the same local workspace without a data transfer. Existing JSON backups can still be restored, regardless of the filename.
+
+Export a backup and quit Tutorly before launching Lessavio. On macOS, the new bundle has a different filename (`Lessavio.app`), so the old `Tutorly.app` may remain in Applications. After checking your data in Lessavio, you can remove the old app bundle; keep the shared application data folder. Do not run both names simultaneously. The GitHub repository address remains unchanged.
 
 ## Update or uninstall
 
 ### Update
 
 1. Export a backup.
-2. Close Tutorly.
+2. Close Lessavio.
 3. Download the newer installer for your platform from Releases.
 4. Install it in the same way as the original version, replacing the existing app when prompted.
-5. Open Tutorly and check your workspace.
+5. Open Lessavio and check your workspace.
 
 Automatic updates are not implemented in version 0.2.0. Data is stored separately from the application bundle, but keeping an external backup before an update is recommended.
 
 ### Uninstall
 
-- **macOS:** quit Tutorly and move the application from Applications to the Trash.
-- **Windows:** uninstall Tutorly through the operating system's installed-apps settings.
+- **macOS:** quit Lessavio and move the application from Applications to the Trash.
+- **Windows:** uninstall Lessavio through the operating system's installed-apps settings.
 
 Application files and workspace data are separate. Do not assume uninstalling erases all personal data. To remove the workspace permanently, first export anything you need, close the app, and then remove its application data folder. Deleting that folder removes the local database and internal snapshots. Exported backup files must be removed separately if you no longer need them.
 
@@ -220,8 +237,8 @@ Follow the official [Tauri prerequisites](https://v2.tauri.app/start/prerequisit
 The following commands work from Terminal on macOS or PowerShell on Windows:
 
 ```sh
-git clone https://github.com/Valentin-Holovin/Tutorly.git
-cd Tutorly
+git clone https://github.com/Valentin-Holovin/Tutorly.git Lessavio
+cd Lessavio
 npm ci --prefix desktop
 npm run desktop:dev
 ```
@@ -278,14 +295,14 @@ For tests, architecture details, and release publishing, see the [developer guid
 | The OS blocks an unsigned installer | Verify its origin and consult the maintainer. Public releases should be signed; do not disable system security globally. |
 | Windows shows a blank window or cannot initialize the interface | Check that Microsoft Edge WebView2 Runtime is installed. |
 | Data disappears after a browser refresh | You are using the browser preview. Launch the native app with `npm run desktop:dev` or install a release. |
-| Tutorly reports a data loading error | Do not delete the database. Close other copies of the app and check permissions or available disk space. Retry, and keep a copy of existing data before attempting recovery. |
+| Lessavio reports a data loading error | Do not delete the database. Close other copies of the app and check permissions or available disk space. Retry, and keep a copy of existing data before attempting recovery. |
 | A lesson cannot be saved due to a conflict | Check other non-cancelled lessons. Overlapping times are blocked, including lessons for different students. |
 | A balance is unexpected | Check completed lesson prices and recorded payments. Scheduled lessons do not deduct funds. |
 | `cargo` or `rustc` is not found | Install Rust and reopen the terminal so its PATH changes are loaded. |
-| Development port 1420 is already in use | Stop the earlier Tutorly development server and retry. |
+| Development port 1420 is already in use | Stop the earlier Lessavio development server and retry. |
 
 ## Current limitations
 
 Version 0.2.0 does not include automatic synchronization, multiple in-app profiles, automatic updates, payment editing, or an internal snapshot recovery screen. Recurring lessons are generated through the end date you select; they do not extend automatically. To correct a payment, remove the incorrect entry and record a new one.
 
-This is a new desktop implementation. The older web application remains in `client/` and `src/`; it is not used by Tutorly Desktop, and its data is not imported.
+This is a new desktop implementation. The older web application remains in `client/` and `src/`; it is not used by Lessavio Desktop, and its data is not imported.

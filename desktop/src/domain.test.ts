@@ -1,3 +1,5 @@
+import { moveLesson, inferSeriesDraft, editableSeries, replaceSeries, zonedDate, zonedTime } from './planning.ts';
+import { financialSummary } from './finance.ts';
 import { generateOccurrences, createSeriesLessons, seriesConflicts, cancelUpcomingSeries, type RecurrenceRule } from './recurrence.ts';
 import { detectLanguage, translator, locales } from './i18n.ts';
 import { readFileSync } from 'node:fs';
@@ -102,4 +104,64 @@ test('cancelling future occurrences keeps history, completed charges and other s
  assert.deepEqual(result.map(l=>l.status),['scheduled','cancelled','completed','scheduled']);
  assert.equal(lessons[1].status,'scheduled');
  const w={...emptyWorkspace(),lessons};assert.equal(balance({...w,lessons:result},'s1'),balance(w,'s1'));
+});
+
+
+test('moving a lesson uses profile timezone, retains series membership, and protects completed lessons',()=>{
+ const original={...lesson,status:'scheduled' as const,seriesId:'series',startsAt:'2026-10-23T13:00:00Z'};
+ const moved=moveLesson([original],original.id,'2026-10-26','16:00','Europe/Kyiv');
+ assert.equal(moved.startsAt,'2026-10-26T14:00:00.000Z');assert.equal(moved.seriesId,'series');assert.equal(original.startsAt,'2026-10-23T13:00:00Z');
+ assert.throws(()=>moveLesson([lesson],lesson.id,'2026-10-26','16:00','Europe/Kyiv'),/только запланированные/);
+ assert.throws(()=>moveLesson([original,{...original,id:'busy',startsAt:moved.startsAt}],original.id,'2026-10-26','16:00','Europe/Kyiv'),/уже есть/);
+ assert.equal(zonedDate(moved.startsAt,'Europe/Kyiv'),'2026-10-26');assert.equal(zonedTime(moved.startsAt,'Europe/Kyiv'),'16:00');
+});
+test('series editing replaces only selected scheduled occurrences and preserves history and payments',()=>{
+ let id=0;const created=createSeriesLessons({studentId:'s1',duration:60,price:50000,notes:'',rule:weeklyRule},[],()=>`edit-${id++}`);
+ const now=Date.parse('2026-10-25T00:00:00Z');
+ const original=created.map((l,i)=>i===0?{...l,status:'completed' as const}:i===4?{...l,status:'cancelled' as const}:l);
+ const draft=inferSeriesDraft(original[0],original,'Europe/Kyiv','future',now);
+ draft.rule.slots=draft.rule.slots.map(s=>({...s,time:s.weekday===1?'19:00':s.time}));
+ const updated=replaceSeries(original,original[0].seriesId!,draft,'future',now,()=>`new-${id++}`);
+ assert.deepEqual(updated.find(l=>l.id===original[0].id),original[0]);
+ assert.deepEqual(updated.find(l=>l.id===original[1].id),original[1]);
+ assert.deepEqual(updated.find(l=>l.id===original[4].id),original[4]);
+ assert.equal(updated.filter(l=>l.status==='scheduled'&&Date.parse(l.startsAt)>=now).some(l=>zonedTime(l.startsAt,'Europe/Kyiv')==='19:00'),true);
+ assert.equal(original[3].startsAt,created[3].startsAt);
+});
+test('editing all scheduled lessons still protects completed and cancelled records; conflicts are atomic',()=>{
+ let id=0;const original=createSeriesLessons({studentId:'s1',duration:60,price:50000,notes:'',rule:weeklyRule},[],()=>`all-${id++}`);
+ original[0].status='completed';original[1].status='cancelled';const now=Date.parse('2026-11-05T00:00:00Z');
+ const draft=inferSeriesDraft(original[2],original,'Europe/Kyiv','scheduled',now);
+ assert.equal(editableSeries(original,original[0].seriesId!,'future',now).length,0);
+ const updated=replaceSeries(original,original[0].seriesId!,draft,'scheduled',now,()=>`allnew-${id++}`);
+ assert.deepEqual(updated.find(l=>l.id===original[0].id),original[0]);assert.deepEqual(updated.find(l=>l.id===original[1].id),original[1]);
+ const blocked=[...original,{...original[2],id:'outside',seriesId:undefined,startsAt:original[2].startsAt}];
+ const snapshot=JSON.stringify(blocked);assert.throws(()=>replaceSeries(blocked,original[0].seriesId!,draft,'scheduled',now),/пересечения/);assert.equal(JSON.stringify(blocked),snapshot);
+});
+test('legacy biweekly series can be inferred without recurrence metadata',()=>{
+ let id=0;const original=createSeriesLessons({studentId:'s1',duration:60,price:100,notes:'',rule:{...weeklyRule,endDate:'2026-12-01',intervalWeeks:2}},[],()=>`legacy-${id++}`).map(({seriesRule,...lesson})=>lesson);
+ const draft=inferSeriesDraft(original[0],original,'Europe/Kyiv','scheduled',Date.parse('2026-10-20T00:00:00Z'));
+ assert.equal(draft.rule.intervalWeeks,2);assert.deepEqual(draft.rule.slots,weeklyRule.slots);
+});
+test('financial summary separates month cash from lesson value and carries previous balances',()=>{
+ const w={...emptyWorkspace(),students:[{id:'s1',name:'Anna',subject:'',phone:'',price:50000,notes:'',archived:false},{id:'s2',name:'Ben',subject:'',phone:'',price:50000,notes:'',archived:true}],lessons:[{...lesson,id:'sept',startsAt:'2026-09-10T12:00:00Z',price:50000},{...lesson,id:'oct',startsAt:'2026-10-10T12:00:00Z',price:30000},{...lesson,id:'future',startsAt:'2026-10-20T12:00:00Z',status:'scheduled' as const,price:20000},{...lesson,id:'cancel',status:'cancelled' as const,price:90000}],payments:[{id:'p1',studentId:'s1',amount:20000,paidAt:'2026-10-10T00:00:00Z'},{id:'p2',studentId:'s2',amount:40000,paidAt:'2026-09-01T00:00:00Z'},{id:'later',studentId:'s1',amount:100000,paidAt:'2026-11-01T12:00:00Z'}]};
+ const summary=financialSummary(w,'2026-10','Europe/Kyiv');
+ assert.equal(summary.received,20000);assert.equal(summary.earned,30000);assert.equal(summary.debt,60000);assert.equal(summary.credit,40000);assert.equal(summary.planned,20000);assert.equal(summary.rows.length,2);
+ assert.equal(financialSummary(w,'2026-09','Europe/Kyiv').debt,50000);
+});
+test('finance month boundaries follow the profile time zone and reminder settings survive backups',()=>{
+ const w={...emptyWorkspace(),profile:{name:'Tutor',currency:'UAH' as const,timeZone:'Europe/Kyiv',reminderMinutes:15},students:[{id:'s1',name:'Anna',subject:'',phone:'',price:50000,notes:'',archived:false}],lessons:[{...lesson,startsAt:'2026-09-30T22:30:00Z'}],payments:[]};
+ assert.equal(financialSummary(w,'2026-10','Europe/Kyiv').earned,50000);assert.equal(financialSummary(w,'2026-09','Europe/Kyiv').earned,0);
+ const backup=JSON.parse(JSON.stringify(w));validateWorkspace(backup);assert.equal(backup.profile!.reminderMinutes,15);
+ assert.throws(()=>validateWorkspace({...w,profile:{...w.profile,reminderMinutes:7}}));
+});
+
+test('series edits do not recreate completed or cancelled dates inside the range',()=>{
+ const rule:RecurrenceRule={startDate:'2026-11-02',endDate:'2026-11-23',intervalWeeks:1,timeZone:'UTC',slots:[{weekday:1,time:'16:00'}]};
+ const draft={studentId:'s1',duration:60,price:50000,notes:'',rule};let sequence=0;
+ const initial=createSeriesLessons(draft,[],()=>String(++sequence));
+ initial[1].status='completed';initial[2].status='cancelled';
+ const result=replaceSeries(initial,initial[0].seriesId!,{...draft,rule:{...rule,slots:[{weekday:1,time:'18:00'}]}},'scheduled',0,()=>String(++sequence));
+ assert.equal(result.length,4);assert.equal(result.filter(l=>l.status==='scheduled').length,2);
+ assert.equal(result.find(l=>l.id===initial[1].id)?.startsAt,initial[1].startsAt);
 });

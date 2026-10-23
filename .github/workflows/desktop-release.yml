@@ -35,7 +35,7 @@ jobs:
         with:
           projectPath: desktop
           tagName: desktop-v__VERSION__
-          releaseName: Tutorly Desktop v__VERSION__
+          releaseName: Lessavio Desktop v__VERSION__
           releaseBody: 'Скачайте .dmg для Mac или setup.exe для Windows. Тестовые установщики без подписи издателя.'
           releaseDraft: true
           prerelease: true
@@ -53,13 +53,15 @@ jobs:
           import shutil
           import subprocess
 
-          version = json.loads(Path("desktop/src-tauri/tauri.conf.json").read_text())["version"]
+          config = json.loads(Path("desktop/src-tauri/tauri.conf.json").read_text())
+          version = config["version"]
+          product = config["productName"]
           windows = os.environ["RUNNER_OS"] == "Windows"
           pattern = "*-setup.exe" if windows else "*.dmg"
           candidates = list(Path("desktop/src-tauri/target").rglob(pattern))
           if len(candidates) != 1:
               raise RuntimeError(f"Expected one installer for {pattern}, found {candidates}")
-          name = "Tutorly-Windows-Setup.exe" if windows else "Tutorly-macOS.dmg"
+          name = f"{product}-Windows-Setup.exe" if windows else f"{product}-macOS.dmg"
           asset = Path(os.environ["RUNNER_TEMP"]) / name
           shutil.copy2(candidates[0], asset)
           subprocess.run(["gh", "release", "upload", f"desktop-v{version}", str(asset), "--clobber"], check=True)

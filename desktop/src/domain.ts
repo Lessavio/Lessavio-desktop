@@ -1,7 +1,8 @@
+import type { RecurrenceRule } from './recurrence';
 import type { Language } from './i18n';
-export interface Profile { language?: Language; name: string; currency: 'UAH' | 'EUR' | 'USD'; timeZone: string }
+export interface Profile { reminderMinutes?: number; language?: Language; name: string; currency: 'UAH' | 'EUR' | 'USD'; timeZone: string }
 export interface Student { id: string; name: string; subject: string; phone: string; price: number; notes: string; archived: boolean }
-export interface Lesson { id: string; seriesId?: string; studentId: string; startsAt: string; duration: number; price: number; status: 'scheduled' | 'completed' | 'cancelled'; notes: string }
+export interface Lesson { id: string; seriesId?: string; seriesRule?: RecurrenceRule; studentId: string; startsAt: string; duration: number; price: number; status: 'scheduled' | 'completed' | 'cancelled'; notes: string }
 export interface Payment { id: string; studentId: string; amount: number; paidAt: string }
 export interface Workspace { version: 1; profile: Profile | null; students: Student[]; lessons: Lesson[]; payments: Payment[] }
 export const emptyWorkspace = (): Workspace => ({ version: 1, profile: null, students: [], lessons: [], payments: [] });
@@ -12,7 +13,7 @@ export function validateWorkspace(value: unknown): asserts value is Workspace {
   const money = (v: unknown) => Number.isSafeInteger(v) && (v as number) >= 0;
   const date = (v: unknown) => text(v, 100) && Number.isFinite(Date.parse(v as string));
   if (w.profile !== null) {
-    if (!w.profile || !text(w.profile.name, 100) || !w.profile.name.trim() || !['UAH','EUR','USD'].includes(w.profile.currency) || !text(w.profile.timeZone,100) || !w.profile.timeZone || (w.profile.language !== undefined && !['ru','uk','en'].includes(w.profile.language))) throw Error('Некорректный профиль');
+    if (!w.profile || !text(w.profile.name, 100) || !w.profile.name.trim() || !['UAH','EUR','USD'].includes(w.profile.currency) || !text(w.profile.timeZone,100) || !w.profile.timeZone || (w.profile.reminderMinutes !== undefined && ![0,5,10,15,30,60].includes(w.profile.reminderMinutes)) || (w.profile.language !== undefined && !['ru','uk','en'].includes(w.profile.language))) throw Error('Некорректный профиль');
     try { new Intl.DateTimeFormat('ru', {timeZone: w.profile.timeZone}).format(); } catch { throw Error('Некорректный часовой пояс'); }
   }
   const ids = new Set<string>();
@@ -23,6 +24,11 @@ export function validateWorkspace(value: unknown): asserts value is Workspace {
   const lessonIds = new Set<string>();
   for (const l of w.lessons) {
     if (!l || !text(l.id,100) || !l.id || lessonIds.has(l.id) || !ids.has(l.studentId) || !date(l.startsAt) || !Number.isInteger(l.duration) || l.duration < 15 || l.duration > 480 || !money(l.price) || !['scheduled','completed','cancelled'].includes(l.status) || !text(l.notes) || (l.seriesId !== undefined && (!text(l.seriesId,100) || !l.seriesId))) throw Error('Некорректные данные занятия');
+    if(l.seriesRule){
+      const rule=l.seriesRule;
+      if(!text(rule.startDate,10)||!text(rule.endDate,10)||!date(rule.startDate)||!date(rule.endDate)||!text(rule.timeZone,100)||![1,2].includes(rule.intervalWeeks)||!Array.isArray(rule.slots)||!rule.slots.length||rule.slots.length>7||new Set(rule.slots.map(s=>s.weekday)).size!==rule.slots.length||rule.slots.some(s=>!Number.isInteger(s.weekday)||s.weekday<1||s.weekday>7||!/^([01]\d|2[0-3]):[0-5]\d$/.test(s.time)))throw Error('Некорректные данные занятия');
+      try{new Intl.DateTimeFormat('en',{timeZone:rule.timeZone}).format();}catch{throw Error('Некорректный часовой пояс');}
+    }
     lessonIds.add(l.id);
   }
   const paymentIds = new Set<string>();

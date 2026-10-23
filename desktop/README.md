@@ -1,8 +1,16 @@
-# Tutorly Desktop — Developer Guide
+# Lessavio Desktop — Developer Guide
 
-Tutorly Desktop is a local application for independent tutors built with Tauri 2, React, TypeScript, Rust, and SQLite. It has no hosted backend, online authentication, or cloud database.
+Lessavio Desktop is a local application for independent tutors built with Tauri 2, React, TypeScript, Rust, and SQLite. It has no hosted backend, online authentication, or cloud database.
 
 For a product overview, installer instructions for macOS and Windows, first-run setup, and backup procedures, read the **[main README](../README.md)**.
+
+## Rebrand (0.3.0)
+
+The application is now **Lessavio**. UI strings, window titles, package names, backup filenames, and future release assets use the new name. The repository stays at its existing URL.
+
+The Tauri identifier remains `com.tutorly.desktop`, and Rust still opens `tutorly.sqlite`. These are deliberate compatibility identifiers, not missed branding changes. Keep both stable until a tested migration is explicitly introduced. Existing profile records, students, lessons, recurring series, and exported JSON backups need no format changes.
+
+The release workflow derives stable download filenames from `productName`: `Lessavio-macOS.dmg` and `Lessavio-Windows-Setup.exe`. README buttons continue to point at the working Tutorly 0.2.0 assets until a Lessavio release is actually published. Do not change those links to nonexistent assets.
 
 ## Interface languages (0.2.0)
 
@@ -10,7 +18,7 @@ Settings and first-run setup include **Русский**, **Українська*
 
 Translations cover navigation, screens, forms, notifications, validation errors, and app-provided file dialog titles. Dates, times, currency formatting, and month names use the selected locale. Operating-system dialog controls follow the OS language. Technical errors from SQLite or the operating system may retain their original wording.
 
-Install version 0.2.0 to use translations. The published installers are available through the main README download buttons.
+Install version 0.2.0 to use translations. The published 0.2.0 installers are still named Tutorly; Lessavio 0.3.0 has not been published yet.
 
 ## Selection controls (0.2.0)
 
@@ -48,6 +56,15 @@ The `desktop` package is independent of the older root/client npm workspace. Ins
 | `npm run build --prefix desktop` | Check TypeScript and build frontend assets; does not create an installer. |
 | `npm test --prefix desktop` | Run domain tests using Node's built-in test runner. |
 | `cargo test --release --manifest-path desktop/src-tauri/Cargo.toml` | Run Rust tests for persistence, snapshots, and backup envelope validation. |
+
+## Scheduling, finances, and reminders (0.4.0)
+
+- **Edit a series:** open an occurrence and choose **Edit series**. Apply changes to future lessons or all scheduled lessons. Adjust weekdays, times, duration, price, and end date with a preview and conflict checks. Completed and cancelled records and payments are preserved; protected dates are not recreated.
+- **Drag to reschedule:** drag a scheduled lesson onto another day in Month view or a time slot in Week view (30-minute snapping). Review the date and exact time before confirming. Moving one occurrence does not change the rest of its series. Completed and cancelled lessons cannot be dragged.
+- **Financial overview:** choose a month to see payments received, completed lesson value, planned value, and student balances. Month-end debt and credit include earlier history and remain separate across students. Dates follow the profile time zone.
+- **Local reminders:** in Settings, select 5, 10, 15, 30, or 60 minutes and allow system notifications. A test button checks delivery. Reminders run in the native process while the app is open, including when minimized; they stop after quitting. The computer must be awake, and OS notification settings apply. After sleep, reminders are sent only for lessons that have not started. Sent reminders are tracked locally in SQLite to prevent repeated delivery after restart.
+
+These features are available in the 0.4.0 source build; the download buttons still point to the published 0.2.0 release until a new release is published.
 
 ## Architecture
 
@@ -132,7 +149,7 @@ npm run bundle -- --bundles app,dmg
 Outputs:
 
 ```text
-src-tauri/target/release/bundle/macos/Tutorly.app
+src-tauri/target/release/bundle/macos/Lessavio.app
 src-tauri/target/release/bundle/dmg/*.dmg
 ```
 
@@ -167,7 +184,7 @@ npm run build --prefix desktop
 cargo test --release --manifest-path desktop/src-tauri/Cargo.toml
 ```
 
-Domain tests cover money parsing, lesson conflicts, balance calculation, and backup integrity. Rust tests cover workspace persistence, retention of the previous daily state, and rejection of invalid backup envelopes.
+Domain tests cover money parsing, lesson conflicts, balance calculation, and backup integrity. Rust tests cover workspace persistence, retention of the previous daily state, rejection of invalid backup envelopes, and reminder eligibility. Version 0.4.0 also tests series editing, rescheduling, protected history, monthly finance totals, time zones, and backup compatibility. Browser checks covered creating/editing a series, confirming a drag in Month view, and rendering Finance and reminder settings. Native notification delivery and Week-view drag completion still require platform testing.
 
 Before publishing a release, verify on real macOS and Windows installations:
 
@@ -188,18 +205,18 @@ The workflow at [`.github/workflows/desktop-release.yml`](../.github/workflows/d
 - A universal macOS application and DMG.
 - A Windows NSIS installer.
 - A **draft prerelease** containing the build assets.
-- Stable download filenames for the main README buttons: `Tutorly-macOS.dmg` and `Tutorly-Windows-Setup.exe`.
+- Stable download filenames for the main README buttons: `Lessavio-macOS.dmg` and `Lessavio-Windows-Setup.exe`.
 
 It uses the repository's `GITHUB_TOKEN` with `contents: write`. It does not upload user databases or backups.
 
-### Publish a release (example: 0.2.0)
+### Publish a release (example: 0.3.0)
 
 1. Push the source and lock files to GitHub.
 2. Open **Actions → Desktop installers → Run workflow**, or push the matching version tag:
 
    ```sh
-   git tag desktop-v0.2.0
-   git push origin desktop-v0.2.0
+   git tag desktop-v0.3.0
+   git push origin desktop-v0.3.0
    ```
 
 3. Wait for both platform jobs to finish successfully.
@@ -229,6 +246,6 @@ There is no automatic updater in 0.2.0. Users manually install a newer version; 
 
 ## Scope of the preview
 
-Not implemented: cloud sync, in-app profile switching, payment editing, a dedicated finance ledger, automatic updates, snapshot recovery UI.
+Not implemented: cloud sync, in-app profile switching, payment editing, automatic updates, snapshot recovery UI.
 
 The older web application in the repository's `client/` and `src/` directories is separate. Its dependencies, database migration scripts, and root `dev` / `build` commands belong to that legacy application. Desktop development does not import its data.

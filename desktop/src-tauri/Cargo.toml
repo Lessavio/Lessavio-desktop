@@ -1,6 +1,6 @@
 [package]
-name = "tutorly-desktop"
-version = "0.2.0"
+name = "lessavio-desktop"
+version = "0.4.0"
 edition = "2021"
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -11,3 +11,5 @@ serde_json = "1"
 rusqlite = { version = "0.32", features = ["bundled"] }
 rfd = "0.15"
 tauri-plugin-single-instance = "2"
+tauri-plugin-notification = "2"
+chrono = "0.4"
