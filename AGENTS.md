@@ -30,7 +30,7 @@ Last reviewed: 2026-10-23 (Europe/Kyiv). Update this file when architecture or r
 
 ## Firebase
 
-- Public app configuration: `desktop/src/firebase.config.json`, project `lessavio-1fa05`; environment overrides documented in `.env.example`.
+- Firebase configuration is loaded only from `VITE_FIREBASE_*` environment values. Local values are in ignored `desktop/.env`; template: `desktop/.env.example`. Release workflow uses five matching repository Actions secrets. Never commit `.env` or restore a hard-coded fallback. Web config is still embedded in installers, and historical commits retain previously published config.
 - Share one Firebase app through `firebase.ts`.
 - Email/password registration, sign-in, verification, reset and sign-out are implemented. Google/Phone/Anonymous providers enabled in the console do not imply implemented UI flows.
 - Guest mode is local and does not create a Firebase anonymous account.
