@@ -6,12 +6,12 @@ Formerly **Tutorly**. The source version is now **Lessavio 0.5.0**; your existin
 
 ## Download and install
 
-[![Install for Windows](https://img.shields.io/badge/Install_for_Windows-Download_EXE-2563EB?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.5.0/Lessavio-Windows-Setup.exe)
-[![Install for macOS](https://img.shields.io/badge/Install_for_macOS-Download_DMG-2F6D56?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.5.0/Lessavio-macOS.dmg)
+[![Install for Windows](https://img.shields.io/badge/Install_for_Windows-Download_EXE-2563EB?style=for-the-badge)](https://github.com/Lessavio/Lessavio-desktop/releases/download/desktop-v0.5.0/Lessavio-Windows-Setup.exe)
+[![Install for macOS](https://img.shields.io/badge/Install_for_macOS-Download_DMG-2F6D56?style=for-the-badge)](https://github.com/Lessavio/Lessavio-desktop/releases/download/desktop-v0.5.0/Lessavio-macOS.dmg)
 
 **Windows:** download and run the installer. **Mac:** open the DMG and drag the app into Applications. The macOS release download is intended for both Apple Silicon and Intel Macs.
 
-> **Download status:** **Lessavio 0.5.0** is published with installers for macOS (Apple Silicon and Intel) and Windows x64. These are unsigned preview builds. See the [release notes](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.5.0).
+> **Download status:** **Lessavio 0.5.0** is published with installers for macOS (Apple Silicon and Intel) and Windows x64. These are unsigned preview builds. See the [release notes](https://github.com/Lessavio/Lessavio-desktop/releases/tag/desktop-v0.5.0).
 
 [Detailed macOS installation](#macos) · [Detailed Windows installation](#windows)
 
@@ -67,7 +67,7 @@ Lessavio runs locally after installation. You do not need an internet connection
 
 ### Download an installer
 
-Open the repository's **[Releases page](https://github.com/Valentin-Holovin/Tutorly/releases)** and expand **Assets** for the version you want.
+Open the repository's **[Releases page](https://github.com/Lessavio/Lessavio-desktop/releases)** and expand **Assets** for the version you want.
 
 | Your computer | File to download |
 | --- | --- |
@@ -77,7 +77,7 @@ Open the repository's **[Releases page](https://github.com/Valentin-Holovin/Tuto
 
 On a Mac, open **Apple menu → About This Mac** to check the processor.
 
-**Availability:** [version 0.5.0](https://github.com/Valentin-Holovin/Tutorly/releases/tag/desktop-v0.5.0) includes published macOS and Windows installers. Future workflow runs create a draft release that the maintainer must publish. GitHub's “Source code” ZIP and TAR.GZ downloads are source files, not installers.
+**Availability:** [version 0.5.0](https://github.com/Lessavio/Lessavio-desktop/releases/tag/desktop-v0.5.0) includes published macOS and Windows installers. Future workflow runs create a draft release that the maintainer must publish. GitHub's “Source code” ZIP and TAR.GZ downloads are source files, not installers.
 
 You do **not** need Git, Node.js, Rust, or PostgreSQL to use a ready-made installer.
 
@@ -256,7 +256,7 @@ Follow the official [Tauri prerequisites](https://v2.tauri.app/start/prerequisit
 The following commands work from Terminal on macOS or PowerShell on Windows:
 
 ```sh
-git clone https://github.com/Valentin-Holovin/Tutorly.git Lessavio
+git clone https://github.com/Lessavio/Lessavio-desktop.git Lessavio
 cd Lessavio
 npm ci --prefix desktop
 npm run desktop:dev

@@ -25,7 +25,7 @@ Lessavio does not yet have an Apple Developer ID signature or notarization. macO
 This grants an exception for this app. You do not need to disable Gatekeeper or run Terminal commands. If macOS explicitly reports malware or damage, stop and obtain a fresh installer from this repository instead of bypassing that warning.
 
 
-![macOS installation: 1. Select Privacy & Security; 2. Click Open Anyway.](https://raw.githubusercontent.com/Valentin-Holovin/Tutorly/main/docs/images/macos-open-anyway-guide.png)
+![macOS installation: 1. Select Privacy & Security; 2. Click Open Anyway.](https://raw.githubusercontent.com/Lessavio/Lessavio-desktop/main/docs/images/macos-open-anyway-guide.png)
 
 **1 — Privacy & Security. 2 — Open Anyway.** Scroll down to the Security section first. The button appears after macOS blocks an attempted launch.
 
