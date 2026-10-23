@@ -4,6 +4,30 @@ Tutorly Desktop is a local application for independent tutors built with Tauri 2
 
 For a product overview, installer instructions for macOS and Windows, first-run setup, and backup procedures, read the **[main README](../README.md)**.
 
+## Interface languages (0.2.0)
+
+Settings and first-run setup include **Русский**, **Українська**, and **English**. Existing profiles without a language field continue in Russian. New workspaces detect a supported system language, falling back to English. Changing the language on an existing profile saves it immediately through the normal SQLite transaction. The preference is also included in exported backups; older backups without it remain supported.
+
+Translations cover navigation, screens, forms, notifications, validation errors, and app-provided file dialog titles. Dates, times, currency formatting, and month names use the selected locale. Operating-system dialog controls follow the OS language. Technical errors from SQLite or the operating system may retain their original wording.
+
+Version 0.2.0 must be built and installed to use translations; the published 0.1.0 installers are unchanged.
+
+## Selection controls (0.2.0)
+
+Language, currency, time zone, student, and lesson status use shared keyboard-accessible selectors. Long lists support search, including student subjects and prices. Use arrows and Enter to choose, Escape to dismiss, and Tab to continue the form. The time zone list includes the zones supported by the local runtime and preserves an existing profile's zone.
+
+Lesson dates use a localized Monday-first calendar with today/tomorrow shortcuts, month/year navigation, arrow-key day navigation, and Page Up / Page Down for months (Shift for years). Time can be typed to the minute or set from quick presets; duration offers 30, 45, 60, and 90 minutes while allowing any value in the supported 15–480 range. New lessons default to the next quarter hour in the computer's local time zone.
+
+## Recurring lessons (0.2.0)
+
+Use **Recurring lessons** on Today/Calendar, switch modes in the new lesson dialog, or open it from a student card. Pick weekdays and assign each its own time (for example Monday 16:00, Friday 18:00, Saturday 12:30), duration, price, and an inclusive start/end date. Repeat every week or every two weeks, anchored to the Monday of the start week. Defaults cover eight weeks; quick ranges cover 4, 8, or 12 weeks. The maximum range is 366 days between endpoints.
+
+Preview lists dates and conflicts before saving. UTC instants are generated from the profile's IANA time zone, independently of the computer's local zone. Daylight saving changes preserve the chosen wall-clock time; nonexistent or ambiguous local times are rejected with the affected date and time. A conflict with another lesson or within the series blocks the entire batch. No partial series is written.
+
+The series is materialized into ordinary scheduled lessons through the selected end date. There is no background extension beyond that date. An optional `seriesId` groups occurrences and is included in backups; old backups without this field remain valid. Individual edits affect one occurrence. The lesson editor also lets users confirm cancellation of all upcoming scheduled occurrences in its series, preserving completed/past lessons and payments.
+
+Domain tests cover weekday-specific times, inclusive boundaries, biweekly anchoring, DST changes/gaps/ambiguities, intra-series overlaps, atomic conflict rejection, and backup round-trips.
+
 ## Development setup
 
 Use Node.js 22.18+, npm, Rust stable, and the native build tools described in the official [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/). macOS needs Xcode Command Line Tools; Windows needs the Microsoft C++ toolchain, Windows SDK, and WebView2 Runtime.
@@ -205,6 +229,6 @@ There is no automatic updater in 0.1.0. Users manually install a newer version; 
 
 ## Scope of the preview
 
-Not implemented: cloud sync, in-app profile switching, recurring lessons, payment editing, a dedicated finance ledger, automatic updates, snapshot recovery UI, and interface localization beyond Russian.
+Not implemented: cloud sync, in-app profile switching, payment editing, a dedicated finance ledger, automatic updates, snapshot recovery UI.
 
 The older web application in the repository's `client/` and `src/` directories is separate. Its dependencies, database migration scripts, and root `dev` / `build` commands belong to that legacy application. Desktop development does not import its data.

@@ -1,6 +1,7 @@
-export interface Profile { name: string; currency: 'UAH' | 'EUR' | 'USD'; timeZone: string }
+import type { Language } from './i18n';
+export interface Profile { language?: Language; name: string; currency: 'UAH' | 'EUR' | 'USD'; timeZone: string }
 export interface Student { id: string; name: string; subject: string; phone: string; price: number; notes: string; archived: boolean }
-export interface Lesson { id: string; studentId: string; startsAt: string; duration: number; price: number; status: 'scheduled' | 'completed' | 'cancelled'; notes: string }
+export interface Lesson { id: string; seriesId?: string; studentId: string; startsAt: string; duration: number; price: number; status: 'scheduled' | 'completed' | 'cancelled'; notes: string }
 export interface Payment { id: string; studentId: string; amount: number; paidAt: string }
 export interface Workspace { version: 1; profile: Profile | null; students: Student[]; lessons: Lesson[]; payments: Payment[] }
 export const emptyWorkspace = (): Workspace => ({ version: 1, profile: null, students: [], lessons: [], payments: [] });
@@ -11,7 +12,7 @@ export function validateWorkspace(value: unknown): asserts value is Workspace {
   const money = (v: unknown) => Number.isSafeInteger(v) && (v as number) >= 0;
   const date = (v: unknown) => text(v, 100) && Number.isFinite(Date.parse(v as string));
   if (w.profile !== null) {
-    if (!w.profile || !text(w.profile.name, 100) || !w.profile.name.trim() || !['UAH','EUR','USD'].includes(w.profile.currency) || !text(w.profile.timeZone,100) || !w.profile.timeZone) throw Error('Некорректный профиль');
+    if (!w.profile || !text(w.profile.name, 100) || !w.profile.name.trim() || !['UAH','EUR','USD'].includes(w.profile.currency) || !text(w.profile.timeZone,100) || !w.profile.timeZone || (w.profile.language !== undefined && !['ru','uk','en'].includes(w.profile.language))) throw Error('Некорректный профиль');
     try { new Intl.DateTimeFormat('ru', {timeZone: w.profile.timeZone}).format(); } catch { throw Error('Некорректный часовой пояс'); }
   }
   const ids = new Set<string>();
@@ -21,7 +22,7 @@ export function validateWorkspace(value: unknown): asserts value is Workspace {
   }
   const lessonIds = new Set<string>();
   for (const l of w.lessons) {
-    if (!l || !text(l.id,100) || !l.id || lessonIds.has(l.id) || !ids.has(l.studentId) || !date(l.startsAt) || !Number.isInteger(l.duration) || l.duration < 15 || l.duration > 480 || !money(l.price) || !['scheduled','completed','cancelled'].includes(l.status) || !text(l.notes)) throw Error('Некорректные данные занятия');
+    if (!l || !text(l.id,100) || !l.id || lessonIds.has(l.id) || !ids.has(l.studentId) || !date(l.startsAt) || !Number.isInteger(l.duration) || l.duration < 15 || l.duration > 480 || !money(l.price) || !['scheduled','completed','cancelled'].includes(l.status) || !text(l.notes) || (l.seriesId !== undefined && (!text(l.seriesId,100) || !l.seriesId))) throw Error('Некорректные данные занятия');
     lessonIds.add(l.id);
   }
   const paymentIds = new Set<string>();

@@ -21,7 +21,7 @@ Tutorly helps you organize students, schedule lessons, and track payments on you
 
 Built with **Tauri 2, React, TypeScript, Rust, and SQLite** for macOS and Windows.
 
-> **Current version: 0.1.0 — early preview.** The interface is currently in Russian. An English README does not change the application language. Universal macOS and Windows x64 installers have been built successfully in GitHub Actions and published. Full native installation and interface testing on both platforms remains pending. Current installers are not signed with a publisher certificate.
+> **Current version: 0.1.0 — early preview.** The published 0.1.0 installer has a Russian interface. The 0.2.0 source version adds Russian, Ukrainian, and English in Settings, with the preference saved in the local profile. Universal macOS and Windows x64 installers have been built successfully in GitHub Actions and published. Full native installation and interface testing on both platforms remains pending. Current installers are not signed with a publisher certificate.
 
 ## Contents
 
@@ -99,6 +99,20 @@ Windows may show an unknown publisher or SmartScreen warning for an unsigned pre
 6. **Save a backup.** Open **Настройки** (Settings) and export a copy to a safe location.
 
 There is no email address, password, or online account. Reopening Tutorly loads the saved workspace for the current operating-system account.
+
+### Recurring lessons (0.2.0)
+
+Open **Recurring lessons** from Today, Calendar, or a student card. Select the weekdays and give each its own time, such as Monday 16:00, Friday 18:00, and Saturday 12:30. Choose the date range, lesson duration, and price. Repeat weekly or every two weeks.
+
+The preview shows the exact dates and any conflicts. Conflicting schedules are not saved. Lessons follow the profile's time zone and keep their local times across daylight saving changes. All occurrences are created together through the end date; the app does not automatically extend the series beyond that date. You can edit or cancel an individual lesson, or confirm cancellation of future scheduled lessons in its series.
+
+This feature requires the 0.2.0 source build or a newer installer; the published 0.1.0 installer does not include it.
+
+### Interface language (0.2.0)
+
+At first launch or in **Settings → Interface language**, choose **Русский**, **Українська**, or **English**. On an existing profile, changing the language applies and saves it immediately. Your preference is retained after reopening the desktop app and is included in backups. Existing profiles without a language preference continue in Russian.
+
+This feature is available in the 0.2.0 source build; the published 0.1.0 download remains Russian-only until a new release is published.
 
 ### Currency and time zones
 
@@ -272,6 +286,6 @@ For tests, architecture details, and release publishing, see the [developer guid
 
 ## Current limitations
 
-Version 0.1.0 does not include automatic synchronization, multiple in-app profiles, recurring lesson creation, automatic updates, payment editing, an internal snapshot recovery screen, or an English interface. To correct a payment, remove the incorrect entry and record a new one.
+Version 0.1.0 does not include automatic synchronization, multiple in-app profiles, recurring lesson creation, automatic updates, payment editing, or an internal snapshot recovery screen. The 0.2.0 source version includes Russian, Ukrainian, and English interface translations. To correct a payment, remove the incorrect entry and record a new one.
 
 This is a new desktop implementation. The older web application remains in `client/` and `src/`; it is not used by Tutorly Desktop, and its data is not imported.

@@ -30,16 +30,16 @@ fn persist(conn: &mut Connection, payload: &str) -> Result<(), String> {
     tx.commit().map_err(|e| e.to_string())
 }
 #[tauri::command]
-async fn export_backup(db: State<'_, Database>) -> Result<bool, String> {
+async fn export_backup(db: State<'_, Database>, language: String) -> Result<bool, String> {
     let payload: Option<String> = { db.0.lock().map_err(|e| e.to_string())?.query_row("SELECT payload FROM workspace WHERE id=1", [], |r|r.get(0)).optional().map_err(|e|e.to_string())? };
     let Some(payload) = payload else { return Err("Сначала создайте профиль".into()) };
-    let file = rfd::AsyncFileDialog::new().set_title("Сохранить резервную копию").set_file_name("Tutorly-backup.json").add_filter("Tutorly backup", &["json"]).save_file().await;
+    let file = rfd::AsyncFileDialog::new().set_title(match language.as_str() { "uk" => "Зберегти резервну копію", "en" => "Save backup", _ => "Сохранить резервную копию" }).set_file_name("Tutorly-backup.json").add_filter("Tutorly backup", &["json"]).save_file().await;
     if let Some(file) = file { file.write(payload.as_bytes()).await.map_err(|e| e.to_string())?; return Ok(true); }
     Ok(false)
 }
 #[tauri::command]
-async fn read_backup() -> Result<Option<String>, String> {
-    let file = rfd::AsyncFileDialog::new().set_title("Восстановить резервную копию").add_filter("Tutorly backup", &["json"]).pick_file().await;
+async fn read_backup(language: String) -> Result<Option<String>, String> {
+    let file = rfd::AsyncFileDialog::new().set_title(match language.as_str() { "uk" => "Відновити резервну копію", "en" => "Restore backup", _ => "Восстановить резервную копию" }).add_filter("Tutorly backup", &["json"]).pick_file().await;
     if let Some(file) = file {
         if fs::metadata(file.path()).map_err(|e|e.to_string())?.len() > 20_000_000 { return Err("Файл слишком большой".into()); }
         let payload = fs::read_to_string(file.path()).map_err(|e|e.to_string())?;
