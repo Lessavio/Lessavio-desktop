@@ -164,6 +164,7 @@ The workflow at [`.github/workflows/desktop-release.yml`](../.github/workflows/d
 - A universal macOS application and DMG.
 - A Windows NSIS installer.
 - A **draft prerelease** containing the build assets.
+- Stable download filenames for the main README buttons: `Tutorly-macOS.dmg` and `Tutorly-Windows-Setup.exe`.
 
 It uses the repository's `GITHUB_TOKEN` with `contents: write`. It does not upload user databases or backups.
 
@@ -192,7 +193,7 @@ Keep these version fields aligned:
 - `desktop/src-tauri/Cargo.toml`
 - `desktop/src-tauri/tauri.conf.json`
 
-Update `desktop/package-lock.json` and `desktop/src-tauri/Cargo.lock`, update user-facing version text and documentation, and use a matching `desktop-vX.Y.Z` tag. The workflow derives its release version from the Tauri application configuration.
+Update `desktop/package-lock.json` and `desktop/src-tauri/Cargo.lock`, update user-facing version text and the download button URLs in the main README, and use a matching `desktop-vX.Y.Z` tag. The workflow derives its release version from the Tauri application configuration.
 
 ### Signing and updates
 

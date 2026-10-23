@@ -40,3 +40,27 @@ jobs:
           releaseDraft: true
           prerelease: true
           args: ${{ matrix.args }}
+
+      - name: Add download button assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PYTHON'
+          import json
+          import os
+          from pathlib import Path
+          import shutil
+          import subprocess
+
+          version = json.loads(Path("desktop/src-tauri/tauri.conf.json").read_text())["version"]
+          windows = os.environ["RUNNER_OS"] == "Windows"
+          pattern = "*-setup.exe" if windows else "*.dmg"
+          candidates = list(Path("desktop/src-tauri/target").rglob(pattern))
+          if len(candidates) != 1:
+              raise RuntimeError(f"Expected one installer for {pattern}, found {candidates}")
+          name = "Tutorly-Windows-Setup.exe" if windows else "Tutorly-macOS.dmg"
+          asset = Path(os.environ["RUNNER_TEMP"]) / name
+          shutil.copy2(candidates[0], asset)
+          subprocess.run(["gh", "release", "upload", f"desktop-v{version}", str(asset), "--clobber"], check=True)
+          PYTHON

@@ -1,5 +1,20 @@
 # Tutorly Desktop
 
+**Your students, lessons, and payments — in one offline desktop app.**
+
+## Download and install
+
+[![Install for Windows](https://img.shields.io/badge/Install_for_Windows-Download_EXE-2563EB?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.1.0/Tutorly-Windows-Setup.exe)
+[![Install for macOS](https://img.shields.io/badge/Install_for_macOS-Download_DMG-2F6D56?style=for-the-badge)](https://github.com/Valentin-Holovin/Tutorly/releases/download/desktop-v0.1.0/Tutorly-macOS.dmg)
+
+**Windows:** download and run the installer. **Mac:** open the DMG and drag Tutorly into Applications. The macOS release download is intended for both Apple Silicon and Intel Macs.
+
+> **First release pending:** no GitHub release has been published yet. These download buttons will work once the maintainer builds and publishes `desktop-v0.1.0` with its installer files. Until then, use the [source installation instructions](#run-from-source). See [all releases](https://github.com/Valentin-Holovin/Tutorly/releases).
+
+[Detailed macOS installation](#macos) · [Detailed Windows installation](#windows)
+
+---
+
 **A private, offline desktop workspace for independent tutors.**
 
 Tutorly helps you organize students, schedule lessons, and track payments on your own computer. Each tutor sets up a local profile and works with their own data. There is no online registration, hosted backend, or cloud database to configure or pay for.
