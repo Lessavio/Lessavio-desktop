@@ -62,10 +62,10 @@ Last reviewed: 2026-10-24 (Europe/Kyiv). Update this file when architecture or r
 
 ## Release state
 
-- Repository: `Lessavio/Lessavio-desktop`. Last verified published release: 0.5.0 (desktop-v0.5.0), built from fd820fb.
+- Repository: `Lessavio/Lessavio-desktop`. Last verified published release: 0.5.1 (desktop-v0.5.1), built from 0900faf.
 - Current source version: 0.5.1; authentication, analytics and review fixes are included in the local 0.5.0 commit. Inspect Git status before editing; preserve existing work.
 - Workflow: `.github/workflows/desktop-release.yml`, macOS universal and Windows NSIS. Verify both uploaded installers and stable download aliases before calling a release complete.
-- GitHub Actions run 39988826871 successfully built macOS universal and Windows x64 installers. Release 0.5.0 is published with both stable download aliases. Local Apple Silicon DMG was also rebuilt after review; its image checksum passed verification.
+- GitHub Actions run 40122436820 successfully built macOS universal and Windows x64 installers. Release 0.5.1 is published with both stable download aliases. Desktop Google OAuth remains disabled until VITE_GOOGLE_DESKTOP_CLIENT_ID is configured.
 - More details: `docs/accounts-and-sync.md`, `docs/analytics.md`, `docs/quality-review-2026-10-23.md`.
 
 ## 2026-10-24 UI fixes
