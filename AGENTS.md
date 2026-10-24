@@ -1,6 +1,6 @@
 # Lessavio: project context
 
-Last reviewed: 2026-10-23 (Europe/Kyiv). Update this file when architecture or release status changes.
+Last reviewed: 2026-10-24 (Europe/Kyiv). Update this file when architecture or release status changes.
 
 ## Product and user preferences
 
@@ -32,7 +32,7 @@ Last reviewed: 2026-10-23 (Europe/Kyiv). Update this file when architecture or r
 
 - Firebase configuration is loaded only from `VITE_FIREBASE_*` environment values. Local values are in ignored `desktop/.env`; template: `desktop/.env.example`. Release workflow uses five matching repository Actions secrets. Never commit `.env` or restore a hard-coded fallback. Web config is still embedded in installers, and historical commits retain previously published config.
 - Share one Firebase app through `firebase.ts`.
-- Email/password registration, sign-in, verification, reset and sign-out are implemented. Google/Phone/Anonymous providers enabled in the console do not imply implemented UI flows.
+- Email/password registration, sign-in, verification, reset and sign-out are implemented. Google now has a system-browser PKCE/loopback flow in `google_auth.rs`, plus a browser-preview popup. Desktop Google requires `VITE_GOOGLE_DESKTOP_CLIENT_ID` in local env and Actions secret; it is not configured or live-tested yet. Phone/Anonymous have no UI flows.
 - Guest mode is local and does not create a Firebase anonymous account.
 - Auth emulator is allowed only in development with a demo project and loopback endpoint. Production must ignore emulator configuration.
 - Analytics is opt-in per workspace/device and defaults off. Consent is outside teaching-data backups. Never send names, email, phone, lesson notes, amounts or Firebase UID.
@@ -52,18 +52,27 @@ Last reviewed: 2026-10-23 (Europe/Kyiv). Update this file when architecture or r
 
 ## Translation and verification
 
-- Catalogs: `desktop/src/locales/{en,ru,uk}.json`; currently 324 keys each.
+- Catalogs: `desktop/src/locales/{en,ru,uk}.json`; currently 335 keys each.
 - `desktop/scripts/check-translations.mjs` checks source strings, all catalogs and interpolation placeholders. Native language names and search aliases have explicit exceptions.
 - Run `npm ci --prefix desktop`, `npm test --prefix desktop`, `npm run build --prefix desktop`.
 - Run `cargo test --manifest-path desktop/src-tauri/Cargo.toml` with a working Rust toolchain.
-- Last review: 34 TypeScript tests, 9 Rust tests and translation audit passed; production dependency audit found zero vulnerabilities.
+- Last review: 36 TypeScript tests, 11 Rust tests and translation audit passed; production dependency audit found zero vulnerabilities.
 - Temporary Rust tooling used in this session: `/private/tmp/tutorly-cargo/bin`, with `RUSTUP_HOME=/private/tmp/tutorly-rustup` and `CARGO_HOME=/private/tmp/tutorly-cargo`. These paths may disappear.
 - Browser checks covered English/Ukrainian/Russian settings and finance month boundaries. Installed native notification delivery, Windows installation and week-view drag completion still need device checks.
 
 ## Release state
 
 - Repository: `Lessavio/Lessavio-desktop`. Last verified published release: 0.5.0 (desktop-v0.5.0), built from fd820fb.
-- Current source version: 0.5.0; authentication, analytics and review fixes are included in the local 0.5.0 commit. Inspect Git status before editing; preserve existing work.
+- Current source version: 0.5.1; authentication, analytics and review fixes are included in the local 0.5.0 commit. Inspect Git status before editing; preserve existing work.
 - Workflow: `.github/workflows/desktop-release.yml`, macOS universal and Windows NSIS. Verify both uploaded installers and stable download aliases before calling a release complete.
 - GitHub Actions run 39988826871 successfully built macOS universal and Windows x64 installers. Release 0.5.0 is published with both stable download aliases. Local Apple Silicon DMG was also rebuilt after review; its image checksum passed verification.
 - More details: `docs/accounts-and-sync.md`, `docs/analytics.md`, `docs/quality-review-2026-10-23.md`.
+
+## 2026-10-24 UI fixes
+
+- Separate registration/sign-in buttons on the welcome screen; direct registration mode and Google action.
+- Twelve selectable student colors; optional `Student.color` survives old backups. Archived students are filtered from calendar/today/upcoming and native reminders; finances and history stay intact.
+- Future-series cancellation uses an in-app confirmation instead of unsupported browser confirm. Completed lessons and payments remain unchanged.
+- Form groups no longer wrap composite controls in a label; this prevents date-picker Close from reopening it. Select menu height is stable during internal scrolling. Buttons align icons and text with inline flex.
+
+Verification of the 2026-10-24 fixes: browser preview confirmed direct registration mode, date-picker Close, two student colors, in-app series cancellation, archive filtering and selectors. Time-zone list height stayed 326.22 px while scrolling from 0 to 2160 px. Real Google login remains pending the Desktop OAuth client configuration; no real account was created in these checks.

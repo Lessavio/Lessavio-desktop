@@ -322,5 +322,16 @@
   "Укажите корректную дату и время занятия": "Enter a valid lesson date and time",
   "Не удалось переключить рабочее пространство. Попробуйте снова.": "Could not switch workspaces. Please try again.",
   "Invalid workspace scope": "Invalid workspace scope",
-  "Invalid account identity": "Invalid account identity"
+  "Invalid account identity": "Invalid account identity",
+  "Цвет ученика": "Student color",
+  "Цвет {number}": "Color {number}",
+  "Подтвердить отмену": "Confirm cancellation",
+  "Продолжить с Google": "Continue with Google",
+  "Завершите вход в браузере…": "Finish signing in in your browser…",
+  "Вход через Google пока недоступен в этой сборке.": "Google sign-in is not available in this build yet.",
+  "Вход отменён. Можно попробовать снова": "Sign-in cancelled. You can try again",
+  "Браузер заблокировал окно входа. Разрешите всплывающие окна": "Your browser blocked the sign-in window. Allow pop-ups",
+  "Время ожидания входа истекло. Попробуйте снова": "Sign-in timed out. Please try again",
+  "Этот email уже связан с другим способом входа. Используйте его": "This email is already linked to another sign-in method. Use that method",
+  "Не удалось войти через Google. Попробуйте снова": "Could not sign in with Google. Please try again"
 }

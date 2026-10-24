@@ -1,7 +1,7 @@
 import { calendarDate, validateRecurrenceRule, type RecurrenceRule } from './recurrenceRule.ts';
 import type { Language } from './i18n';
 export interface Profile { reminderMinutes?: number; language?: Language; name: string; currency: 'UAH' | 'EUR' | 'USD'; timeZone: string }
-export interface Student { id: string; name: string; subject: string; phone: string; price: number; notes: string; archived: boolean }
+export interface Student { id: string; name: string; subject: string; phone: string; price: number; notes: string; archived: boolean; color?: string }
 export interface Lesson { id: string; seriesId?: string; seriesRule?: RecurrenceRule; studentId: string; startsAt: string; duration: number; price: number; status: 'scheduled' | 'completed' | 'cancelled'; notes: string }
 export interface Payment { id: string; studentId: string; amount: number; paidAt: string }
 export interface Workspace { version: 1; profile: Profile | null; students: Student[]; lessons: Lesson[]; payments: Payment[] }
@@ -21,7 +21,7 @@ export function validateWorkspace(value: unknown): asserts value is Workspace {
   }
   const ids = new Set<string>();
   for (const s of w.students) {
-    if (!s || !text(s.id,100) || !s.id || ids.has(s.id) || !text(s.name,100) || !s.name.trim() || !text(s.subject,200) || !text(s.phone,100) || !text(s.notes) || !money(s.price) || typeof s.archived !== 'boolean') throw Error('Некорректные данные ученика');
+    if (!s || !text(s.id,100) || !s.id || ids.has(s.id) || !text(s.name,100) || !s.name.trim() || !text(s.subject,200) || !text(s.phone,100) || !text(s.notes) || !money(s.price) || typeof s.archived !== 'boolean' || (s.color!==undefined && !/^#[0-9a-fA-F]{6}$/.test(s.color))) throw Error('Некорректные данные ученика');
     ids.add(s.id);
   }
   const lessonIds = new Set<string>();

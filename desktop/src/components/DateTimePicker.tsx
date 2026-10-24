@@ -26,7 +26,7 @@ export function DateTimePicker({defaultValue,language,dateOnly=false,name='start
   if(amount!==undefined){e.preventDefault();const next=new Date(day.getFullYear(),day.getMonth(),day.getDate()+amount);setFocused(key(next));setMonth(new Date(next.getFullYear(),next.getMonth(),1));}
  }
  const formatted=new Intl.DateTimeFormat(locale,{day:'numeric',month:'long',year:'numeric'}).format(chosen);
- return <div ref={root} className="datetime-picker">
+ return <div ref={root} className="datetime-picker" onClick={e=>{if((e.target as HTMLElement).closest('button'))e.preventDefault();}}>
   <input type="hidden" name={name} value={dateOnly?date:`${date}T${time}`}/>
   <div className="datetime-row"><button ref={trigger} type="button" className="date-trigger" aria-label={ariaLabel??t('Выбрать дату')} aria-expanded={open} aria-haspopup="dialog" aria-controls={open?id:undefined} onClick={()=>{if(open){close();return;}setMonth(new Date(chosen.getFullYear(),chosen.getMonth(),1));setFocused(date);setOpen(true);}}><CalendarDays size={18}/><span>{formatted}</span></button>{!dateOnly&&<div className="time-field"><Clock size={17}/><input type="time" aria-label={t('Время начала')} value={time} required step={60} onChange={e=>setTime(e.target.value)}/></div>}</div>
   {open&&<div id={id} className="date-popover" role="dialog" aria-label={ariaLabel??t('Выбрать дату')} onKeyDown={e=>{if(e.key==='Escape'){e.stopPropagation();close();}}}>

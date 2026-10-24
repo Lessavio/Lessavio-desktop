@@ -1,3 +1,5 @@
+import { invoke, isTauri } from '@tauri-apps/api/core';
+import { GoogleAuthProvider, signInWithCredential, signInWithPopup, browserPopupRedirectResolver } from 'firebase/auth';
 import { firebaseApp, firebaseConfig as config } from './firebase';
 import { initializeAuth, connectAuthEmulator, indexedDBLocalPersistence, browserLocalPersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signOut, reload, onAuthStateChanged, type Auth, type User } from 'firebase/auth';
 export type { User };
@@ -11,7 +13,7 @@ export function firebaseAuth():Auth {
   const emulatorUrl=import.meta.env.DEV?env.VITE_FIREBASE_AUTH_EMULATOR_URL:undefined;
   if(emulatorUrl&&(!firebaseProjectId.startsWith('demo-')||!/^http:\/\/(127\.0\.0\.1|localhost):9099$/.test(emulatorUrl)))throw new Error('Use a demo project and loopback address for the Auth emulator');
   const app=firebaseApp();
-  auth=initializeAuth(app,{persistence:[indexedDBLocalPersistence,browserLocalPersistence]});
+  auth=initializeAuth(app,{persistence:[indexedDBLocalPersistence,browserLocalPersistence],...(!isTauri()?{popupRedirectResolver:browserPopupRedirectResolver}:{})});
   if(emulatorUrl)connectAuthEmulator(auth,emulatorUrl,{disableWarnings:true});
  }
  return auth;
@@ -23,3 +25,16 @@ export async function verifyEmail(language:string,user?:User){const a=firebaseAu
 export async function resetPassword(email:string,language:string){const a=firebaseAuth();a.languageCode=language;await sendPasswordResetEmail(a,email.trim());}
 export async function refreshUser(){const a=firebaseAuth();if(a.currentUser)await reload(a.currentUser);return a.currentUser;}
 export async function logout(){await signOut(firebaseAuth());}
+
+const googleDesktopClientId=env.VITE_GOOGLE_DESKTOP_CLIENT_ID||'';
+export const googleConfigured=authConfigured&&(!isTauri()||/^[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/.test(googleDesktopClientId));
+export async function loginGoogle(language:string){
+ const auth=firebaseAuth();auth.languageCode=language;
+ if(!isTauri())return (await signInWithPopup(auth,new GoogleAuthProvider())).user;
+ if(!googleConfigured)throw {code:'auth/google-not-configured'};
+ try{
+  const token=await invoke<string>('google_login',{clientId:googleDesktopClientId});
+  return (await signInWithCredential(auth,GoogleAuthProvider.credential(token))).user;
+ }catch(error){if(typeof error==='string')throw {code:error};if(typeof error==='object'&&error!==null&&'code' in error&&error.code==='auth/invalid-credential')throw {code:'auth/google-failed'};throw error;}
+}
+export async function cancelGoogleLogin(){if(isTauri())await invoke('cancel_google_login');}

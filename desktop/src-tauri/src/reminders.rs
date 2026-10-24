@@ -10,6 +10,7 @@ pub fn due(workspace:&Value,now:i64)->Vec<Reminder>{
  let mut result=Vec::new();
  for lesson in lessons {
   if lesson["status"]!="scheduled"{continue;}
+  if workspace["students"].as_array().is_some_and(|students|students.iter().any(|s|s["id"]==lesson["studentId"]&&s["archived"]==true)){continue;}
   let Some(starts_at)=lesson["startsAt"].as_str() else {continue;};
   let Ok(starts)=chrono::DateTime::parse_from_rfc3339(starts_at) else {continue;};
   let remaining=starts.timestamp()-now;
@@ -28,6 +29,7 @@ mod tests {
   let now=chrono::DateTime::parse_from_rfc3339("2026-10-23T10:00:00Z").unwrap().timestamp();
   let mut w=serde_json::json!({"profile":{"reminderMinutes":15,"language":"en"},"students":[{"id":"s","name":"Anna"}],"lessons":[{"id":"a","studentId":"s","status":"scheduled","startsAt":"2026-10-23T10:10:00Z"},{"id":"b","status":"cancelled","startsAt":"2026-10-23T10:10:00Z"},{"id":"c","status":"completed","startsAt":"2026-10-23T10:10:00Z"},{"id":"d","status":"scheduled","startsAt":"2026-10-23T09:59:00Z"},{"id":"e","status":"scheduled","startsAt":"2026-10-23T10:16:00Z"}]});
   let result=due(&w,now);assert_eq!(result.len(),1);assert_eq!(result[0].id,"a");assert_eq!(result[0].body,"Anna · 10 min");
+  w["students"][0]["archived"]=serde_json::json!(true);assert!(due(&w,now).is_empty());
   w["profile"]["reminderMinutes"]=serde_json::json!(0);assert!(due(&w,now).is_empty());
  }
  #[test]

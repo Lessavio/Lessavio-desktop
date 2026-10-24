@@ -1,3 +1,4 @@
+import { visibleLessons, studentColor, studentColors, nextStudentColor } from './studentColors.ts';
 import { moveLesson, inferSeriesDraft, editableSeries, replaceSeries, zonedDate, zonedTime } from './planning.ts';
 import { financialSummary } from './finance.ts';
 import { generateOccurrences, createSeriesLessons, seriesConflicts, cancelUpcomingSeries, type RecurrenceRule } from './recurrence.ts';
@@ -263,4 +264,23 @@ test('auth failures also deactivate native data context; stale transitions canno
  ready[1]();await failure;ready[0]();await alice;
  assert.deepEqual(states.at(-1),{ready:true,user:null,error:'Auth unavailable'});
  const pending=transitions.change('bob');transitions.dispose();const count=states.length;ready[2]();await pending;await transitions.change('charlie');assert.equal(states.length,count);
+});
+
+
+test('archived students disappear from the schedule without deleting history or balances',()=>{
+ const w=emptyWorkspace();
+ w.students=[{id:'a',name:'Anna',subject:'',phone:'',price:100,notes:'',archived:false},{id:'b',name:'Bob',subject:'',phone:'',price:100,notes:'',archived:true}];
+ w.lessons=[{id:'la',studentId:'a',startsAt:'2026-10-24T12:00:00Z',duration:60,price:100,status:'scheduled',notes:''},{id:'lb',studentId:'b',startsAt:'2026-10-24T14:00:00Z',duration:60,price:100,status:'completed',notes:''}];
+ assert.deepEqual(visibleLessons(w.lessons,w.students).map(l=>l.id),['la']);
+ assert.equal(w.lessons.length,2);assert.equal(balance(w,'b'),-100);
+ w.students[1].archived=false;assert.equal(visibleLessons(w.lessons,w.students).length,2);
+});
+test('student colors survive backups, have safe defaults and reject CSS injection',()=>{
+ const w=emptyWorkspace();
+ w.students=[{id:'a',name:'Anna',subject:'',phone:'',price:0,notes:'',archived:false}];
+ assert.equal(studentColor(w.students[0]),studentColors[0]);
+ assert.notEqual(nextStudentColor(w.students),studentColors[0]);
+ w.students[0].color=studentColors[3];validateWorkspace(w);
+ assert.equal(studentColor(JSON.parse(JSON.stringify(w)).students[0]),studentColors[3]);
+ w.students[0].color='url(https://example.com)';assert.throws(()=>validateWorkspace(w));
 });

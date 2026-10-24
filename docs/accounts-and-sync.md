@@ -92,3 +92,20 @@ Keep local SQLite as the working copy. Add an authenticated sync transport behin
 Firebase sign-in alone does not upload, synchronize, back up, or encrypt teaching data.
 
 References: [Password authentication](https://firebase.google.com/docs/auth/web/password-auth), [Session persistence](https://firebase.google.com/docs/auth/web/auth-state-persistence), [User management](https://firebase.google.com/docs/auth/web/manage-users).
+
+
+## Google sign-in on desktop
+
+The welcome screen has separate **Create an account** and **Sign in** actions, plus **Continue with Google**. The same Google action is offered in the email form. Guest mode remains available.
+
+Desktop Google sign-in opens the system browser, uses Authorization Code + PKCE (S256) and a temporary `127.0.0.1` callback on an ephemeral port, then exchanges the Google ID token for a Firebase session. No hosted backend or Google refresh token storage is added. State/path checks, a two-minute timeout and cancellation protect the local callback. Error responses never expose tokens.
+
+Enabling Google in Firebase is necessary but does not create a Desktop OAuth client:
+
+1. Open Google Cloud Console / Google Auth Platform **Clients** in the same project as Firebase.
+2. Create an OAuth client of type **Desktop app**. Use only its client ID; do not use a service account or a Web client secret.
+3. Set `VITE_GOOGLE_DESKTOP_CLIENT_ID` in ignored `desktop/.env` and in a matching repository Actions secret, then rebuild.
+4. In Firebase Authentication → Google provider, authorize that client ID under the external-project/client-ID allowlist if required by your project configuration. Configure the consent screen/audience and test users as appropriate.
+5. Test browser approval, denial, cancellation, restart persistence and sign-out on both macOS and Windows. Until configured, the desktop Google action is disabled with an explanation; email/password and local mode still work.
+
+Browser preview uses Firebase's popup flow; its origin must be in Firebase authorized domains. Real Google sign-in is not verified until the Desktop client is configured.

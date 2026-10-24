@@ -5,6 +5,12 @@ export function accountScope(projectId:string,uid:string):string {
 export function authErrorKey(error:unknown):string {
  const code=typeof error==='object'&&error!==null&&'code' in error?String(error.code):'';
  switch(code){
+  case 'auth/google-not-configured':return 'Вход через Google пока недоступен в этой сборке.';
+  case 'auth/popup-closed-by-user':case 'auth/cancelled-popup-request':case 'auth/google-cancelled':return 'Вход отменён. Можно попробовать снова';
+  case 'auth/popup-blocked':return 'Браузер заблокировал окно входа. Разрешите всплывающие окна';
+  case 'auth/google-timeout':return 'Время ожидания входа истекло. Попробуйте снова';
+  case 'auth/account-exists-with-different-credential':return 'Этот email уже связан с другим способом входа. Используйте его';
+  case 'auth/google-failed':return 'Не удалось войти через Google. Попробуйте снова';
   case 'auth/invalid-email':return 'Введите корректный email';
   case 'auth/email-already-in-use':return 'Этот email уже используется';
   case 'auth/weak-password':case 'auth/password-does-not-meet-requirements':return 'Пароль не соответствует требованиям Firebase';
