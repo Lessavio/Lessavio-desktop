@@ -4,11 +4,11 @@
 - Fixed the Add lesson button in empty schedules: the plus icon now stays vertically centered with its label. The illustration margin no longer affects icons inside buttons.
 - Existing workspaces, backups and account isolation remain compatible. Optional analytics still requires explicit consent. No cloud synchronization is introduced.
 
-**Release preparation:** this file describes the pending 0.5.2 release. Installers have not been published. Existing download links continue to point to 0.5.1 until verified 0.5.2 assets are available.
+**Released:** 0.5.2 installers are available from [GitHub Releases](https://github.com/Lessavio/Lessavio-desktop/releases/tag/desktop-v0.5.2).
 
 **Before updating:** export a JSON backup. Teaching data remains local. Do not downgrade to 0.4.0 after editing in 0.5.x because older versions read the retained legacy migration snapshot.
 
-Planned installer names: **Lessavio-macOS.dmg** (Apple Silicon and Intel) and **Lessavio-Windows-Setup.exe** (Windows x64). macOS builds remain unsigned and unnotarized.
+Installers: **Lessavio-macOS.dmg** (Apple Silicon and Intel) and **Lessavio-Windows-Setup.exe** (Windows x64). macOS builds remain unsigned and unnotarized.
 
 ### Install on macOS (unsigned preview)
 

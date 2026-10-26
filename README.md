@@ -2,18 +2,18 @@
 
 Formerly **Tutorly**. The source version is now **Lessavio 0.5.2**; your existing local workspace remains compatible.
 
-**0.5.2 is being prepared:** Google sign-in has been removed from the desktop app; email/password sign-in and guest mode remain available. Empty-state button icons are aligned correctly. See the [0.5.2 release notes](docs/release-notes-v0.5.2.md). Download buttons below still refer to the published 0.5.1 installers.
+**New in 0.5.2:** Google sign-in has been removed from the desktop app; email/password sign-in and guest mode remain available. Empty-state button icons are aligned correctly. See the [0.5.2 release notes](docs/release-notes-v0.5.2.md).
 
 **Your students, lessons, and payments — in one offline desktop app.**
 
 ## Download and install
 
-[![Install for Windows](https://img.shields.io/badge/Install_for_Windows-Download_EXE-2563EB?style=for-the-badge)](https://github.com/Lessavio/Lessavio-desktop/releases/download/desktop-v0.5.1/Lessavio-Windows-Setup.exe)
-[![Install for macOS](https://img.shields.io/badge/Install_for_macOS-Download_DMG-2F6D56?style=for-the-badge)](https://github.com/Lessavio/Lessavio-desktop/releases/download/desktop-v0.5.1/Lessavio-macOS.dmg)
+[![Install for Windows](https://img.shields.io/badge/Install_for_Windows-Download_EXE-2563EB?style=for-the-badge)](https://github.com/Lessavio/Lessavio-desktop/releases/download/desktop-v0.5.2/Lessavio-Windows-Setup.exe)
+[![Install for macOS](https://img.shields.io/badge/Install_for_macOS-Download_DMG-2F6D56?style=for-the-badge)](https://github.com/Lessavio/Lessavio-desktop/releases/download/desktop-v0.5.2/Lessavio-macOS.dmg)
 
 **Windows:** download and run the installer. **Mac:** open the DMG and drag the app into Applications. The macOS release download is intended for both Apple Silicon and Intel Macs.
 
-> **Download status:** **Lessavio 0.5.1** is published with installers for macOS (Apple Silicon and Intel) and Windows x64. These are unsigned preview builds. See the [release notes](https://github.com/Lessavio/Lessavio-desktop/releases/tag/desktop-v0.5.1).
+> **Download status:** **Lessavio 0.5.2** is published with installers for macOS (Apple Silicon and Intel) and Windows x64. These are unsigned preview builds. See the [release notes](https://github.com/Lessavio/Lessavio-desktop/releases/tag/desktop-v0.5.2).
 
 [Detailed macOS installation](#macos) · [Detailed Windows installation](#windows)
 
@@ -33,7 +33,7 @@ Choose **Sign in or create an account**, or **Continue without an account**. Ema
 
 Each account opens a separate local workspace. Sign-out preserves its data. Existing data from 0.4.0 stays in the workspace available without an account; sign in and use **Settings → Lessavio account → Data from before registration → Copy local data** to copy it into an empty account workspace. The original remains available and the copies do not synchronize.
 
-Accounts are included in the published 0.5.1 installers. See [account setup and future sync architecture](docs/accounts-and-sync.md). Export a backup before upgrading; after editing in 0.5.0, do not downgrade to 0.4.0 because older binaries read the legacy migration snapshot.
+Accounts are included in the published 0.5.2 installers. See [account setup and future sync architecture](docs/accounts-and-sync.md). Export a backup before upgrading; after editing in 0.5.0, do not downgrade to 0.4.0 because older binaries read the legacy migration snapshot.
 
 ## Optional usage analytics (source version 0.5.0)
 
@@ -79,7 +79,7 @@ Open the repository's **[Releases page](https://github.com/Lessavio/Lessavio-des
 
 On a Mac, open **Apple menu → About This Mac** to check the processor.
 
-**Availability:** [version 0.5.1](https://github.com/Lessavio/Lessavio-desktop/releases/tag/desktop-v0.5.1) includes published macOS and Windows installers. Future workflow runs create a draft release that the maintainer must publish. GitHub's “Source code” ZIP and TAR.GZ downloads are source files, not installers.
+**Availability:** [version 0.5.2](https://github.com/Lessavio/Lessavio-desktop/releases/tag/desktop-v0.5.2) includes published macOS and Windows installers. Future workflow runs create a draft release that the maintainer must publish. GitHub's “Source code” ZIP and TAR.GZ downloads are source files, not installers.
 
 You do **not** need Git, Node.js, Rust, or PostgreSQL to use a ready-made installer.
 
@@ -203,7 +203,7 @@ Avoid moving or copying the live SQLite files while Lessavio is open. Use the ap
 - **Financial overview:** choose a month to see payments received, completed lesson value, planned value, and student balances. Month-end debt and credit include earlier history and remain separate across students. Dates follow the profile time zone.
 - **Local reminders:** in Settings, select 5, 10, 15, 30, or 60 minutes and allow system notifications. A test button checks delivery. Reminders run in the native process while the app is open, including when minimized; they stop after quitting. The computer must be awake, and OS notification settings apply. After sleep, reminders are sent only for lessons that have not started. Sent reminders are tracked locally in SQLite to prevent repeated delivery after restart.
 
-These features are included in the published Lessavio 0.5.1 installers linked at the top of the main README.
+These features are included in the published Lessavio 0.5.2 installers linked at the top of the main README.
 
 ## Rename compatibility (0.3.0)
 

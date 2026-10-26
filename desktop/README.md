@@ -10,7 +10,7 @@ The application is now **Lessavio**. UI strings, window titles, package names, b
 
 The Tauri identifier remains `com.tutorly.desktop`, and Rust still opens `tutorly.sqlite`. These are deliberate compatibility identifiers, not missed branding changes. Keep both stable until a tested migration is explicitly introduced. Existing profile records, students, lessons, recurring series, and exported JSON backups need no format changes.
 
-The release workflow derives stable download filenames from `productName`: `Lessavio-macOS.dmg` and `Lessavio-Windows-Setup.exe`. README buttons point to the published Lessavio 0.5.1 assets.
+The release workflow derives stable download filenames from `productName`: `Lessavio-macOS.dmg` and `Lessavio-Windows-Setup.exe`. README buttons point to the published Lessavio 0.5.2 assets.
 
 ## Interface languages (0.2.0)
 
@@ -18,7 +18,7 @@ Settings and first-run setup include **Русский**, **Українська*
 
 Translations cover navigation, screens, forms, notifications, validation errors, and app-provided file dialog titles. Dates, times, currency formatting, and month names use the selected locale. Operating-system dialog controls follow the OS language. Technical errors from SQLite or the operating system may retain their original wording.
 
-Translations are included in the published Lessavio 0.5.1 installers.
+Translations are included in the published Lessavio 0.5.2 installers.
 
 ## Selection controls (0.2.0)
 
@@ -64,11 +64,11 @@ The `desktop` package is independent of the older root/client npm workspace. Ins
 - **Financial overview:** choose a month to see payments received, completed lesson value, planned value, and student balances. Month-end debt and credit include earlier history and remain separate across students. Dates follow the profile time zone.
 - **Local reminders:** in Settings, select 5, 10, 15, 30, or 60 minutes and allow system notifications. A test button checks delivery. Reminders run in the native process while the app is open, including when minimized; they stop after quitting. The computer must be awake, and OS notification settings apply. After sleep, reminders are sent only for lessons that have not started. Sent reminders are tracked locally in SQLite to prevent repeated delivery after restart.
 
-These features are included in the published Lessavio 0.5.1 installers linked at the top of the main README.
+These features are included in the published Lessavio 0.5.2 installers linked at the top of the main README.
 
 ## Optional Firebase accounts and SQLite schema 2 (0.5.0)
 
-See [Accounts and future synchronization](../docs/accounts-and-sync.md) for Firebase setup, emulator commands, account isolation, migration, revision tracking, and the future sync boundary. No teaching records are sent to Firebase. The published 0.5.1 installers include optional email/password accounts.
+See [Accounts and future synchronization](../docs/accounts-and-sync.md) for Firebase setup, emulator commands, account isolation, migration, revision tracking, and the future sync boundary. No teaching records are sent to Firebase. The published 0.5.2 installers include optional email/password accounts.
 
 ## Optional Firebase Analytics (0.5.0)
 
@@ -206,7 +206,7 @@ Before publishing a release, verify on real macOS and Windows installations:
 6. Installation of a newer build over an existing workspace.
 7. Reopening the existing window when launching another instance.
 
-The Apple Silicon macOS installer has been built locally. Native window interaction was not verified through automation because macOS computer-control permissions were unavailable. The universal macOS and Windows x64 builds have also completed successfully in GitHub Actions, and version 0.5.1 is published. Full native installation and interface testing still requires platform verification.
+The Apple Silicon macOS installer has been built locally. Native window interaction was not verified through automation because macOS computer-control permissions were unavailable. The universal macOS and Windows x64 builds have also completed successfully in GitHub Actions, and version 0.5.2 is published. Full native installation and interface testing still requires platform verification.
 
 ## GitHub Releases
 
@@ -260,6 +260,6 @@ Not implemented: cloud sync, payment editing, automatic updates, snapshot recove
 
 The older web application in the repository's `client/` and `src/` directories is separate. Its dependencies, database migration scripts, and root `dev` / `build` commands belong to that legacy application. Desktop development does not import its data.
 
-## Preparing 0.5.2
+## Release 0.5.2
 
-Source manifests now target 0.5.2. Desktop authentication uses email/password only; the Google button, popup/native OAuth flows and OAuth-specific native dependencies have been removed. Local guest mode and opt-in analytics remain available. Empty-state action icons are aligned with button text. See [release notes](../docs/release-notes-v0.5.2.md). Existing published download links remain on 0.5.1 until 0.5.2 installers are built and published.
+Source manifests now target 0.5.2. Desktop authentication uses email/password only; the Google button, popup/native OAuth flows and OAuth-specific native dependencies have been removed. Local guest mode and opt-in analytics remain available. Empty-state action icons are aligned with button text. See [release notes](../docs/release-notes-v0.5.2.md). Universal macOS and Windows x64 installers are published under desktop-v0.5.2; README download links point to that release.

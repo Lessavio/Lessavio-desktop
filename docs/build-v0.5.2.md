@@ -7,7 +7,7 @@ Build completed on 26 October 2026. Source commit: `1494ad9c3a3aa319d4e1bb10ae33
 - macOS universal app and DMG: 7m 9s.
 - Windows x64 NSIS installer: 6m 18s.
 
-The release remains an unpublished draft/prerelease. Public README download buttons intentionally continue to point at 0.5.1. Release notes were applied to the draft without publishing it.
+The verified release was initially saved as a draft and was published on 26 October 2026 at the user's request. [Release desktop-v0.5.2](https://github.com/Lessavio/Lessavio-desktop/releases/tag/desktop-v0.5.2) is now the latest non-prerelease. Both public stable-name installer URLs returned HTTP 200; README download buttons point to 0.5.2.
 
 ## Verification
 
@@ -17,7 +17,7 @@ The release remains an unpublished draft/prerelease. Public README download butt
 - Stable DMG/EXE aliases match their versioned installers byte for byte.
 - The extracted macOS application has `CFBundleShortVersionString=0.5.2`, identifier `com.tutorly.desktop`, and both `arm64` and `x86_64` executable slices.
 - Windows installer has a valid PE executable header. Windows installation/runtime and macOS installation/notification smoke tests were not performed in this build task.
-- macOS has no Developer ID signature/notarization. The unsigned installation guide remains in the draft release notes.
+- macOS has no Developer ID signature/notarization. The unsigned installation guide remains in the release notes.
 
 ## Asset checksums
 
