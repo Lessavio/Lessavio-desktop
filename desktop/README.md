@@ -259,3 +259,7 @@ There is no automatic updater in 0.2.0. Users manually install a newer version; 
 Not implemented: cloud sync, payment editing, automatic updates, snapshot recovery UI.
 
 The older web application in the repository's `client/` and `src/` directories is separate. Its dependencies, database migration scripts, and root `dev` / `build` commands belong to that legacy application. Desktop development does not import its data.
+
+## Preparing 0.5.2
+
+Source manifests now target 0.5.2. Desktop authentication uses email/password only; the Google button, popup/native OAuth flows and OAuth-specific native dependencies have been removed. Local guest mode and opt-in analytics remain available. Empty-state action icons are aligned with button text. See [release notes](../docs/release-notes-v0.5.2.md). Existing published download links remain on 0.5.1 until 0.5.2 installers are built and published.

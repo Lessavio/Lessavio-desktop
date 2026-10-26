@@ -1,6 +1,6 @@
 # Lessavio: project context
 
-Last reviewed: 2026-10-24 (Europe/Kyiv). Update this file when architecture or release status changes.
+Last reviewed: 2026-10-26 (Europe/Kyiv). Update this file when architecture or release status changes.
 
 ## Product and user preferences
 
@@ -32,7 +32,7 @@ Last reviewed: 2026-10-24 (Europe/Kyiv). Update this file when architecture or r
 
 - Firebase configuration is loaded only from `VITE_FIREBASE_*` environment values. Local values are in ignored `desktop/.env`; template: `desktop/.env.example`. Release workflow uses five matching repository Actions secrets. Never commit `.env` or restore a hard-coded fallback. Web config is still embedded in installers, and historical commits retain previously published config.
 - Share one Firebase app through `firebase.ts`.
-- Email/password registration, sign-in, verification, reset and sign-out are implemented. Google now has a system-browser PKCE/loopback flow in `google_auth.rs`, plus a browser-preview popup. Desktop Google requires `VITE_GOOGLE_DESKTOP_CLIENT_ID` in local env and Actions secret; it is not configured or live-tested yet. Phone/Anonymous have no UI flows.
+- Email/password registration, sign-in, verification, reset and sign-out are implemented. Google sign-in and its native/browser implementation have been removed in source version 0.5.2. The separate web app retains Google sign-in. Phone/Anonymous have no UI flows.
 - Guest mode is local and does not create a Firebase anonymous account.
 - Auth emulator is allowed only in development with a demo project and loopback endpoint. Production must ignore emulator configuration.
 - Analytics is opt-in per workspace/device and defaults off. Consent is outside teaching-data backups. Never send names, email, phone, lesson notes, amounts or Firebase UID.
@@ -52,7 +52,7 @@ Last reviewed: 2026-10-24 (Europe/Kyiv). Update this file when architecture or r
 
 ## Translation and verification
 
-- Catalogs: `desktop/src/locales/{en,ru,uk}.json`; currently 335 keys each.
+- Catalogs: `desktop/src/locales/{en,ru,uk}.json`; currently 327 keys each.
 - `desktop/scripts/check-translations.mjs` checks source strings, all catalogs and interpolation placeholders. Native language names and search aliases have explicit exceptions.
 - Run `npm ci --prefix desktop`, `npm test --prefix desktop`, `npm run build --prefix desktop`.
 - Run `cargo test --manifest-path desktop/src-tauri/Cargo.toml` with a working Rust toolchain.
@@ -63,9 +63,9 @@ Last reviewed: 2026-10-24 (Europe/Kyiv). Update this file when architecture or r
 ## Release state
 
 - Repository: `Lessavio/Lessavio-desktop`. Last verified published release: 0.5.1 (desktop-v0.5.1), built from 0900faf.
-- Current source version: 0.5.1; authentication, analytics and review fixes are included in the local 0.5.0 commit. Inspect Git status before editing; preserve existing work.
+- Current source version: 0.5.2 (release preparation; not published); authentication, analytics and review fixes are included in the local 0.5.0 commit. Inspect Git status before editing; preserve existing work.
 - Workflow: `.github/workflows/desktop-release.yml`, macOS universal and Windows NSIS. Verify both uploaded installers and stable download aliases before calling a release complete.
-- GitHub Actions run 40122436820 successfully built macOS universal and Windows x64 installers. Release 0.5.1 is published with both stable download aliases. Desktop Google OAuth remains disabled until VITE_GOOGLE_DESKTOP_CLIENT_ID is configured.
+- GitHub Actions run 40122436820 successfully built macOS universal and Windows x64 installers. Release 0.5.1 is published with both stable download aliases. Desktop Google OAuth is removed in the pending 0.5.2 source.
 - More details: `docs/accounts-and-sync.md`, `docs/analytics.md`, `docs/quality-review-2026-10-23.md`.
 
 ## 2026-10-24 UI fixes
@@ -76,3 +76,15 @@ Last reviewed: 2026-10-24 (Europe/Kyiv). Update this file when architecture or r
 - Form groups no longer wrap composite controls in a label; this prevents date-picker Close from reopening it. Select menu height is stable during internal scrolling. Buttons align icons and text with inline flex.
 
 Verification of the 2026-10-24 fixes: browser preview confirmed direct registration mode, date-picker Close, two student colors, in-app series cancellation, archive filtering and selectors. Time-zone list height stayed 326.22 px while scrolling from 0 to 2160 px. Real Google login remains pending the Desktop OAuth client configuration; no real account was created in these checks.
+
+## 2026-10-26 button alignment and Google diagnosis
+
+- Empty-state illustration spacing now targets `.empty > svg`; nested button icons retain centered alignment. The same fix is applied in the separate Lessavio-web-app repository.
+- The missing Desktop OAuth client was diagnosed, and the user subsequently requested removing Google sign-in. The implementation and setup instructions are removed in 0.5.2.
+
+## 0.5.2 preparation
+
+- Removed desktop Google UI, Firebase popup/credential flow, native OAuth receiver/commands, direct OAuth Rust dependencies and release environment setting. Email/password, guest mode and analytics consent are preserved.
+- Version manifests and lockfiles target 0.5.2; release notes are in docs/release-notes-v0.5.2.md. Published download links intentionally remain at 0.5.1. No tag, push, new release or installer publication is part of this preparation.
+
+Verification for 0.5.2 preparation: 36 TypeScript tests, translation audit (327 keys per language), frontend production build, and 9 remaining native Rust tests passed. Two OAuth-only Rust tests were removed with the deleted OAuth module. Browser preview confirmed email login and registration forms have no Google button. Native installer packaging and publishing have not been performed for 0.5.2.

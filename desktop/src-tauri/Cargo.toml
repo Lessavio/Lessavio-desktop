@@ -1,6 +1,6 @@
 [package]
 name = "lessavio-desktop"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -13,9 +13,3 @@ rfd = "0.15"
 tauri-plugin-single-instance = "2"
 tauri-plugin-notification = "2"
 chrono = "0.4"
-
-base64 = "0.22"
-rand = "0.9"
-sha2 = "0.10"
-url = "2"
-reqwest = { version = "0.13", features = ["blocking", "json", "form"] }

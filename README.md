@@ -1,6 +1,8 @@
 # Lessavio Desktop
 
-Formerly **Tutorly**. The source version is now **Lessavio 0.5.1**; your existing local workspace remains compatible.
+Formerly **Tutorly**. The source version is now **Lessavio 0.5.2**; your existing local workspace remains compatible.
+
+**0.5.2 is being prepared:** Google sign-in has been removed from the desktop app; email/password sign-in and guest mode remain available. Empty-state button icons are aligned correctly. See the [0.5.2 release notes](docs/release-notes-v0.5.2.md). Download buttons below still refer to the published 0.5.1 installers.
 
 **Your students, lessons, and payments — in one offline desktop app.**
 
@@ -23,7 +25,7 @@ Lessavio helps you organize students, schedule lessons, and track payments on yo
 
 Built with **Tauri 2, React, TypeScript, Rust, and SQLite** for macOS and Windows.
 
-> **Source version: Lessavio 0.5.1 — early preview.** Includes Russian, Ukrainian, and English, improved selectors, and recurring lessons with separate times for each weekday. Universal macOS and Windows x64 installers are provided through GitHub Releases. Full native installation and interface testing on both platforms remains pending. Current installers are not signed with a publisher certificate.
+> **Source version: Lessavio 0.5.2 — early preview.** Includes Russian, Ukrainian, and English, improved selectors, and recurring lessons with separate times for each weekday. Universal macOS and Windows x64 installers are provided through GitHub Releases. Full native installation and interface testing on both platforms remains pending. Current installers are not signed with a publisher certificate.
 
 ## Optional accounts (source version 0.5.0)
 

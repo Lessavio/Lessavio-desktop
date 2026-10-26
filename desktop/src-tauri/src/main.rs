@@ -3,7 +3,6 @@ use rusqlite::{params, Connection};
 use std::{fs, sync::Mutex, time::Duration};
 use tauri::{Manager, State};
 use tauri_plugin_notification::NotificationExt;
-mod google_auth;
 mod reminders;
 mod repository;
 #[derive(Default)]
@@ -113,7 +112,7 @@ async fn read_backup(language: String) -> Result<Option<String>, String> {
     Ok(None)
 }
 fn main() {
-    tauri::Builder::default().manage(google_auth::GoogleLogin::default()).plugin(tauri_plugin_notification::init()).plugin(tauri_plugin_single_instance::init(|app, _, _| {
+    tauri::Builder::default().plugin(tauri_plugin_notification::init()).plugin(tauri_plugin_single_instance::init(|app, _, _| {
         if let Some(window) = app.get_webview_window("main") { let _ = window.unminimize(); let _ = window.set_focus(); }
     })).setup(|app| {
         let dir = app.path().app_data_dir()?;
@@ -153,7 +152,7 @@ fn main() {
             if let Ok(conn)=state.0.lock() { let _=conn.execute("DELETE FROM local_notifications WHERE starts_at < strftime('%Y-%m-%dT%H:%M:%fZ','now','-7 days')",[]); };
         });
         Ok(())
-    }).invoke_handler(tauri::generate_handler![google_auth::google_login, google_auth::cancel_google_login, load_workspace, copy_guest_workspace, deactivate_workspace, save_workspace, export_backup, read_backup]).run(tauri::generate_context!()).expect("Could not start Lessavio");
+    }).invoke_handler(tauri::generate_handler![load_workspace, copy_guest_workspace, deactivate_workspace, save_workspace, export_backup, read_backup]).run(tauri::generate_context!()).expect("Could not start Lessavio");
 }
 
 #[cfg(test)]
