@@ -63,7 +63,7 @@ Last reviewed: 2026-10-26 (Europe/Kyiv). Update this file when architecture or r
 ## Release state
 
 - Repository: `Lessavio/Lessavio-desktop`. Last verified published release: 0.5.1 (desktop-v0.5.1), built from 0900faf.
-- Current source version: 0.5.2 (release preparation; not published); authentication, analytics and review fixes are included in the local 0.5.0 commit. Inspect Git status before editing; preserve existing work.
+- Current source version: 0.5.2 (installers built in an unpublished draft); authentication, analytics and review fixes are included in the local 0.5.0 commit. Inspect Git status before editing; preserve existing work.
 - Workflow: `.github/workflows/desktop-release.yml`, macOS universal and Windows NSIS. Verify both uploaded installers and stable download aliases before calling a release complete.
 - GitHub Actions run 40122436820 successfully built macOS universal and Windows x64 installers. Release 0.5.1 is published with both stable download aliases. Desktop Google OAuth is removed in the pending 0.5.2 source.
 - More details: `docs/accounts-and-sync.md`, `docs/analytics.md`, `docs/quality-review-2026-10-23.md`.
@@ -85,6 +85,13 @@ Verification of the 2026-10-24 fixes: browser preview confirmed direct registrat
 ## 0.5.2 preparation
 
 - Removed desktop Google UI, Firebase popup/credential flow, native OAuth receiver/commands, direct OAuth Rust dependencies and release environment setting. Email/password, guest mode and analytics consent are preserved.
-- Version manifests and lockfiles target 0.5.2; release notes are in docs/release-notes-v0.5.2.md. Published download links intentionally remain at 0.5.1. No tag, push, new release or installer publication is part of this preparation.
+- Version manifests and lockfiles target 0.5.2; release notes are in docs/release-notes-v0.5.2.md. Published download links intentionally remain at 0.5.1. Source commit 1494ad9 and tag desktop-v0.5.2 have been pushed. GitHub Actions run 40327721307 built both installers successfully; the release remains an unpublished draft.
 
-Verification for 0.5.2 preparation: 36 TypeScript tests, translation audit (327 keys per language), frontend production build, and 9 remaining native Rust tests passed. Two OAuth-only Rust tests were removed with the deleted OAuth module. Browser preview confirmed email login and registration forms have no Google button. Native installer packaging and publishing have not been performed for 0.5.2.
+Verification for 0.5.2 preparation: 36 TypeScript tests, translation audit (327 keys per language), frontend production build, and 9 remaining native Rust tests passed. Two OAuth-only Rust tests were removed with the deleted OAuth module. Browser preview confirmed email login and registration forms have no Google button. Installer packaging subsequently passed in GitHub Actions run 40327721307 for universal macOS and Windows x64. Downloaded asset digests and stable aliases match; the macOS bundle reports 0.5.2 with arm64 and x86_64. Publishing and native install smoke tests have not been performed for 0.5.2.
+
+## 0.5.2 build verification
+
+- Source/tag: 1494ad9c3a3aa319d4e1bb10ae33492586046732 / desktop-v0.5.2. Both are pushed.
+- GitHub Actions: https://github.com/Lessavio/Lessavio-desktop/actions/runs/40327721307 — success for macOS universal and Windows NSIS.
+- Release is draft/prerelease; do not point public README download buttons to 0.5.2 until publication is requested. Last public release remains 0.5.1.
+- All five downloaded asset SHA-256 digests match GitHub metadata. Stable aliases match versioned installers byte for byte. Details: docs/build-v0.5.2.md.
